@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "CosmosDb.Rag.Embed.Function.V4": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7053",
+      "launchBrowser": false
+    }
+  }
+}
