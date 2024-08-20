@@ -195,4 +195,4 @@ To use the RAG solution with Azure Cosmos DB for NoSQL, you'll need to first upd
         "OpenAIDeploymentName": "[NAME-OF-YOUR-EMBEDDINGS-MODEL]"
     }
   }
-- ```
+  ```
