@@ -8,13 +8,13 @@ This is a provider-based RAG solution that uses OpenAI and supports the followin
 
 ## Movies Database Scenario
 
-The scenario is a transactional database of movies, with a RAG pattern that leverages Azure OpenAI to return natural language responses from natural language queries.
+The scenario is a transactional database of movies, with a RAG pattern that leverages Azure OpenAI to return natural language responses from natural language queries for movie recommendations.
 
 The solution demonstrates:
 - Loading the movies database with initial data
 - Vectorizing the initial data load
 - Vectorizing incremental data changes
-- Vectorizing natural language questions about movie recommendations
+- Vectorizing natural language questions for movie recommendations
 - Running a vector search in the database to retrieve similarity results
 - Delivering a natural language response from the similarity results
 - Generating a movies poster image based on the similarity results
@@ -98,7 +98,7 @@ To use the RAG solution with SQL Server 2022, you'll need to first initialize th
 **Update the application configuration file**
 - Expand the **Rag.MoviesClient** project.
 - Open the **appsettings.json** file.
-- In the **SqlServer** section, supply the server name, username and password for connecting to the database:
+- In the **SqlServer** section, supply the server name, username, and password for connecting to the database:
   ```json
     "SqlServer": {
       "ServerName": "[SERVER-NAME]",
@@ -179,11 +179,20 @@ To use the RAG solution with Azure Cosmos DB for NoSQL, you'll need to first upd
   }
   ```
 
-|                                      | SQL Server 2022                                                                                                                                                  | Azure SQL Database                                                                                                                              | Cosmos DB<br>for NoSQL                                                                                                                                                    | Cosmos DB<br>for MongoDB vCore                                                                                                                 |
-|:-------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------|
-| **Load initial data**                | Server loads from JSON file on local disk.<br>Server shreds JSON to normalized tables.                                                                           | Server loads from JSON file in Azure Blob Storage.<br>Server shreds JSON to normalized tables.                                                  | Client loads from JSON file on local disk (bulk execution).<br>Client saves individual JSON documents to server (bulk execution).                                         | Client loads from JSON file on local disk (bulk write),<br>Client saves individual JSON documents to server.                                   |
-| **Vectorize initial<br>data load**   | Client retrieves data from server.<br>Client calls OpenAI to vectorize data.<br>Client updates vectors to server.<br>Server stores vectors in columnstore index. | Server calls OpenAI to vectorize data.<br>Server stores vectors in native data type.                                                            | Client retrieves data from server.<br>Client calls OpenAI to vectorize data (bulk batching).<br>Client updates vectors to server (bulk execution).                        | Client retrieves data from server.<br>Client calls OpenAI to vectorize data (bulk batching).<br>Client updates vectors to server (bulk write). |
-| **Vectorize<br>new/updated<br>data** | Client calls OpenAI to vectorize new/updated data.<br>Client saves new/updated data to server.<br>Client saves new/updated vectors to server.                    | Client sends new/updated data to server.<br>Server calls OpenAI to vectorize new/updated data.<br>Server updates vectors with native data type. | Azure Function captures new/updated documents via change feed.<br>Azure Function calls OpenAI to vectorize new/updated data.<br>Azure Function updates vectors to server. | Client calls OpenAI to vectorize new/updated data.<br>Client saves new/updated data to server.<br>Client saves new/updated vectors to server.  |
-| **Delete data**                      | Server deletes data from tables.<br>Server deletes vectors from columnstore.                                                                                     | Server deletes data with vectors.                                                                                                               | Server deletes data with vectors.                                                                                                                                         | Server deletes data with vectors.                                                                                                              |
-| **AI assistant**                     | Client calls OpenAI to vectorize question.<br>Server runs classic vector query.                                                                                  | Server calls OpenAI to vectorize question.<br>Server run native vector query  (new T-SQL function).                                             | Client calls OpenAI to vectorize question.<br>Server runs native vector query (VectorDistance function).                                                                  | Client calls OpenAI to vectorize question.<br>Server runs native vector query ($search stage).                                                 |
-
+**Update the Azure Function configuration file**
+- Expand the **Rag.MoviesFunctions.CosmosDb** project.
+- Open the **localsettings.json** file.
+- In the **Values** section, supply the connection string to your Azure Cosmos DB for NoSQL account, the endpoint and API key for your Azure OpenAI resource, and the name your embeddings model deployed to Azure OpenAI:
+  ```json
+  {
+    "IsEncrypted": false,
+    "Values": {
+        "AzureWebJobsStorage": "",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+        "CosmosDbConnectionString": "[CONNECTION-STRING]",
+        "OpenAIEndpoint": "[ENDPOINT]",
+        "OpenAIKey": "[API-KEY]",
+        "OpenAIDeploymentName": "[NAME-OF-YOUR-EMBEDDINGS-MODEL]"
+    }
+  }
+- ```
