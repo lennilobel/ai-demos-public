@@ -19,11 +19,11 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
             public static double RuCost;
         }
 
-		protected override async Task VectorizeMovies(int? movieId)
+		protected override async Task VectorizeMovies(int[] movieIds)
 		{
 			Debugger.Break();
 
-			Context.ItemCount = 0;
+            Context.ItemCount = 0;
             Context.ErrorCount = 0;
             Context.RuCost = 0;
 
@@ -34,9 +34,9 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
             await container.ReplaceThroughputAsync(ThroughputProperties.CreateAutoscaleThroughput(autoscaleMaxThroughput: 10000));
 
             // Query documents in the container (process results in batches)
-            var sql = $"SELECT * FROM c{(movieId == null ? null : $" WHERE c.movieId = {movieId}")}";
-			var iterator = container.GetItemQueryIterator<JObject>(
-                queryText: "SELECT * FROM c",
+            var sql = $"SELECT * FROM c{(movieIds == null ? null : $" WHERE c.movieId = IN({string.Join(',', movieIds)})")}";
+            var iterator = container.GetItemQueryIterator<JObject>(
+                queryText: sql,
                 requestOptions: new QueryRequestOptions { MaxItemCount = 100 });
 
             while (iterator.HasMoreResults)
@@ -44,9 +44,9 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
                 var batchStarted = DateTime.Now;
 
                 // Step 1 - Retrieve the next batch of documents
-                base.ConsoleWrite("Retrieving documents... ", ConsoleColor.Green);
+                ConsoleOutput.Write("Retrieving documents... ", ConsoleColor.Green);
                 var documents = (await iterator.ReadNextAsync()).ToArray();
-                base.ConsoleWriteLine(documents.Length.ToString(), ConsoleColor.Green);
+                ConsoleOutput.WriteLine(documents.Length.ToString(), ConsoleColor.Green);
                 Context.ItemCount += documents.Length;
 
                 // Step 2 - Generate text embeddings (vectors) for the batch of documents
@@ -57,18 +57,18 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
 
                 var batchElapsed = DateTime.Now.Subtract(batchStarted);
 
-                base.ConsoleWriteLine($"Processed documents {Context.ItemCount - documents.Length + 1} - {Context.ItemCount} in {batchElapsed}", ConsoleColor.Cyan);
+                ConsoleOutput.WriteLine($"Processed documents {Context.ItemCount - documents.Length + 1} - {Context.ItemCount} in {batchElapsed}", ConsoleColor.Cyan);
             }
 
             // Lower the throughput on the container
             await container.ReplaceThroughputAsync(ThroughputProperties.CreateAutoscaleThroughput(autoscaleMaxThroughput: 1000));
 
-            base.ConsoleWriteLine($"Generated and embedded vectors for {Context.ItemCount} document(s) with {Context.ErrorCount} error(s) ({Context.RuCost} RUs)", ConsoleColor.Yellow);
+            ConsoleOutput.WriteLine($"Generated and embedded vectors for {Context.ItemCount} document(s) with {Context.ErrorCount} error(s) ({Context.RuCost} RUs)", ConsoleColor.Yellow);
         }
 
         private async Task<IReadOnlyList<EmbeddingItem>> GenerateEmbeddings(JObject[] documents)
         {
-            base.ConsoleWrite("Generating embeddings... ", ConsoleColor.Green);
+            ConsoleOutput.Write("Generating embeddings... ", ConsoleColor.Green);
 
             // Strip meaningless properties and any previous vectors from each document
             foreach (var document in documents)
@@ -90,14 +90,14 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
             var openAIEmbeddings = await Shared.OpenAIClient.GetEmbeddingsAsync(embeddingsOptions);
             var embeddings = openAIEmbeddings.Value.Data;
 
-            base.ConsoleWriteLine(embeddings.Count, ConsoleColor.Green);
+            ConsoleOutput.WriteLine(embeddings.Count, ConsoleColor.Green);
 
             return embeddings;
         }
 
         private async Task SaveVectors(Container container, JObject[] documents, IReadOnlyList<EmbeddingItem> embeddings)
         {
-            base.ConsoleWrite("Saving vectors... ", ConsoleColor.Green);
+            ConsoleOutput.Write("Saving vectors... ", ConsoleColor.Green);
 
             // Set the vectors property of each document from the generated embeddings
             for (var i = 0; i < documents.Length; i++)
@@ -121,7 +121,7 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
                         }
                         else
                         {
-                            base.ConsoleWriteLine($"Error replacing document id='{document["id"]}', title='{document["title"]}'\n{t.Exception.Message}", ConsoleColor.Red);
+                            ConsoleOutput.WriteLine($"Error replacing document id='{document["id"]}', title='{document["title"]}'\n{t.Exception.Message}", ConsoleColor.Red);
                             Context.ErrorCount++;
                         }
                     }));
@@ -129,7 +129,7 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
 
             await Task.WhenAll(tasks);
 
-            base.ConsoleWriteLine(documents.Length, ConsoleColor.Green);
+            ConsoleOutput.WriteLine(documents.Length, ConsoleColor.Green);
         }
 
     }

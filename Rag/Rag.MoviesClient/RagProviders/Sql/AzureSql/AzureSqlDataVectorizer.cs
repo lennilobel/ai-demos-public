@@ -6,15 +6,15 @@ namespace Rag.MoviesClient.RagProviders.Sql.AzureSql
 {
 	public class AzureSqlDataVectorizer : DataVectorizerBase
 	{
-		protected override async Task VectorizeMovies(int? movieId)
+		protected override async Task VectorizeMovies(int[] movieIds)
 		{
 			Debugger.Break();
 
 			await SqlDataAccess.RunStoredProcedure(
 				storedProcedureName: "VectorizeMovies",
-				storedProcedureParameters: movieId == null ? null : new (string, object)[] { ("@MovieId", movieId) }
+				storedProcedureParameters: [("@MovieIdsCsv", movieIds == null ? null : string.Join(',', movieIds))]
 			);
-		}
+		 }
 
 	}
 }

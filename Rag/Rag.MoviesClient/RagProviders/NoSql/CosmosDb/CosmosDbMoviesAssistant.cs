@@ -1,6 +1,7 @@
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Rag.MoviesClient.Config;
 using Rag.MoviesClient.RagProviders.Base;
 using System;
 using System.Collections.Generic;
@@ -73,10 +74,10 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
                     vd.similarity_score DESC
 			";
 
-            if (base._showInternalOperations)
+            if (DemoConfig.Instance.ShowInternalOperations)
             {
-                base.ConsoleWriteHeading("COSMOS DB VECTOR SEARCH QUERY", ConsoleColor.Green);
-                base.ConsoleWriteLine(sql, ConsoleColor.Green);
+                ConsoleOutput.WriteHeading("Cosmos DB for NoSQL Vector Search Query", ConsoleColor.Green);
+                ConsoleOutput.WriteLine(sql, ConsoleColor.Green);
             }
 
             try
@@ -94,15 +95,15 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
                     }
                 }
 
-                if (base._showInternalOperations)
+                if (DemoConfig.Instance.ShowInternalOperations)
                 {
-                    base.ConsoleWriteHeading("COSMOS VECTOR SEARCH RESULT", ConsoleColor.Green);
+                    ConsoleOutput.WriteHeading("Cosmos DB for NoSQL Vector Search Result", ConsoleColor.Green);
 
                     var counter = 0;
                     foreach (var result in results)
                     {
-                        base.ConsoleWriteLine($"{++counter}. {result["Title"]}", ConsoleColor.Green);
-                        base.ConsoleWriteLine(JsonConvert.SerializeObject(result));
+                        ConsoleOutput.WriteLine($"{++counter}. {result["Title"]}", ConsoleColor.Green);
+                        ConsoleOutput.WriteLine(JsonConvert.SerializeObject(result));
                     }
                 }
 
@@ -112,8 +113,8 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
             }
             catch (Exception ex)
             {
-                base.ConsoleWriteLine("Error running vector search query", ConsoleColor.Red);
-				base.ConsoleWriteLine(ex.Message, ConsoleColor.Red);
+                ConsoleOutput.WriteLine("Error running vector search query", ConsoleColor.Red);
+				ConsoleOutput.WriteLine(ex.Message, ConsoleColor.Red);
 
                 return null;
             }

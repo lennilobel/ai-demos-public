@@ -1,8 +1,8 @@
 CREATE PROCEDURE GetMoviesJson
-    @MovieId int = NULL
+	@MovieIdsCsv varchar(max) = NULL
 AS
 BEGIN
 
-    SELECT MoviesJson = dbo.GetMoviesJsonUdf(@MovieId)
+    SELECT MoviesJson = dbo.GetMoviesJsonUdf(@MovieIdsCsv)
 
 END

@@ -1,3 +1,5 @@
+using Microsoft.Data.SqlClient;
+using Rag.MoviesClient.Config;
 using Rag.MoviesClient.RagProviders.Base;
 using Rag.MoviesClient.RagProviders.NoSql.CosmosDb;
 using Rag.MoviesClient.RagProviders.NoSql.MongoDb;
@@ -9,11 +11,22 @@ using System.IO;
 
 namespace Rag.MoviesClient.RagProviders
 {
-	public static class RagProviderFactory
+    public static class RagProviderFactory
 	{
+		public static RagProviderType RagProviderType { get; set; }
+
+		static RagProviderFactory()
+		{
+			var args = Environment.GetCommandLineArgs();
+
+			RagProviderType = args.Length > 1
+				? (RagProviderType)Enum.Parse(typeof(RagProviderType), args[1], ignoreCase: true)
+				: Shared.AppConfig.RagProvider;
+		}
+
 		public static string GetProviderName()
 		{
-			switch (Shared.AppConfig.RagProvider)
+			switch (RagProviderType)
 			{
 				case RagProviderType.AzureSql:
 					return "Azure SQL Database";
@@ -28,12 +41,12 @@ namespace Rag.MoviesClient.RagProviders
 					return "Azure Cosmos DB for MongoDB vCore";
 			}
 
-			throw new NotSupportedException($"No data vectorizer is implemented for RAG provider type {Shared.AppConfig.RagProvider}");
+			throw new NotSupportedException($"No data vectorizer is implemented for RAG provider type {RagProviderType}");
 		}
 
 		public static IDataPopulator GetDataPopulator()
 		{
-			switch (Shared.AppConfig.RagProvider)
+			switch (RagProviderType)
 			{
 				case RagProviderType.AzureSql:
 				case RagProviderType.SqlServer:
@@ -46,12 +59,12 @@ namespace Rag.MoviesClient.RagProviders
 					return new MongoDbDataPopulator();
 			}
 
-			throw new NotSupportedException($"No data populator is implemented for RAG provider type {Shared.AppConfig.RagProvider}");
+			throw new NotSupportedException($"No data populator is implemented for RAG provider type {RagProviderType}");
 		}
 
 		public static IDataVectorizer GetDataVectorizer()
 		{
-			switch (Shared.AppConfig.RagProvider)
+			switch (RagProviderType)
 			{
 				case RagProviderType.AzureSql:
 					return new AzureSqlDataVectorizer();
@@ -66,12 +79,12 @@ namespace Rag.MoviesClient.RagProviders
 					return new MongoDbDataVectorizer();
 			}
 
-			throw new NotSupportedException($"No data vectorizer is implemented for RAG provider type {Shared.AppConfig.RagProvider}");
+			throw new NotSupportedException($"No data vectorizer is implemented for RAG provider type {RagProviderType}");
 		}
 
 		public static IMoviesAssistant GetMoviesAssistant()
 		{
-			switch (Shared.AppConfig.RagProvider)
+			switch (RagProviderType)
 			{
 				case RagProviderType.AzureSql:
 					return new AzureSqlMoviesAssistant();
@@ -86,27 +99,36 @@ namespace Rag.MoviesClient.RagProviders
 					return new MongoDbMoviesAssistant();
 			}
 
-			throw new NotSupportedException($"No movies assistant is implemented for RAG provider type {Shared.AppConfig.RagProvider}");
+			throw new NotSupportedException($"No movies assistant is implemented for RAG provider type {RagProviderType}");
 		}
 
 		public static string GetSqlConnectionString()
 		{
-			switch (Shared.AppConfig.RagProvider)
+			switch (RagProviderType)
 			{
 				case RagProviderType.AzureSql:
-					return Shared.AppConfig.AzureSql.ConnectionString;
+					return BuildConnectionString(Shared.AppConfig.AzureSql);
 
 				case RagProviderType.SqlServer:
-					return Shared.AppConfig.SqlServer.ConnectionString;
-
+					return BuildConnectionString(Shared.AppConfig.SqlServer);
 			}
 
-			throw new NotSupportedException($"No SQL connection string is available for RAG provider type {Shared.AppConfig.RagProvider}");
+			throw new NotSupportedException($"No SQL connection string is available for RAG provider type {RagProviderType}");
 		}
+
+		private static string BuildConnectionString(AppConfig.SqlConfig config) =>
+			new SqlConnectionStringBuilder
+			{
+				DataSource = config.ServerName,
+				InitialCatalog = config.DatabaseName,
+				UserID = config.Username,
+				Password = config.Password,
+				TrustServerCertificate = config.TrustServerCertificate
+			}.ConnectionString;
 
 		public static string GetDataFilePath(string filename)
 		{
-			switch (Shared.AppConfig.RagProvider)
+			switch (RagProviderType)
 			{
 				case RagProviderType.AzureSql:
 					return filename;
@@ -117,7 +139,7 @@ namespace Rag.MoviesClient.RagProviders
 					return new FileInfo($@"Data\{filename}").FullName;
 			}
 
-			throw new NotSupportedException($"No data file path is implemented for RAG provider type {Shared.AppConfig.RagProvider}");
+			throw new NotSupportedException($"No data file path is implemented for RAG provider type {RagProviderType}");
 		}
 
 	}

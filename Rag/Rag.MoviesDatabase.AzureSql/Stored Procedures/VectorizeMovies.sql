@@ -1,13 +1,18 @@
 CREATE PROCEDURE VectorizeMovies
-	@MovieId int = NULL
+	@MovieIdsCsv varchar(max) = NULL
 AS
 BEGIN
 
 	SET NOCOUNT ON
 
-	DECLARE @MoviesJson varchar(max) = dbo.GetMoviesJsonUdf(@MovieId)
+    DECLARE @MovieIds table (MovieId int)
+    INSERT INTO @MovieIds
+        SELECT CONVERT(int, value) AS MovieId
+        FROM STRING_SPLIT(@MovieIdsCsv, ',')
 
-	IF @MovieId IS NOT NULL
+	DECLARE @MoviesJson varchar(max) = dbo.GetMoviesJsonUdf(@MovieIdsCsv)
+
+	IF LEFT(@MoviesJson, 1) = '{'
 		SET @MoviesJson = CONCAT('[', @MoviesJson, ']')
 
 	DECLARE curMovies CURSOR FOR
@@ -22,16 +27,11 @@ BEGIN
 	WHILE @@FETCH_STATUS = 0
 	BEGIN
 
-		SET @MovieId = JSON_VALUE(@MovieJson, '$.MovieId')
+		DECLARE @MovieId int = JSON_VALUE(@MovieJson, '$.MovieId')
 		DECLARE @Title varchar(max) = JSON_VALUE(@MovieJson, '$.Title')
 
 		DECLARE @Message varchar(max) = CONCAT('Vectorizing movie ID ', @MovieId, ' - ', @Title)
 		RAISERROR(@Message, 0, 1) WITH NOWAIT
-
-		DECLARE @MovieText varchar(max) = @MovieJson
-		SET @MovieText = REPLACE(@MovieText, '"', ' ')
-		SET @MovieText = REPLACE(@MovieText, '{', ' ')
-		SET @MovieText = REPLACE(@MovieText, '}', ' ')
 
 		DECLARE @MovieVectors table (
 			VectorValueId int,
@@ -43,7 +43,7 @@ BEGIN
 			DELETE FROM @MovieVectors
 
 			INSERT INTO @MovieVectors
-				EXEC VectorizeText @MovieText
+				EXEC VectorizeText @MovieJson
 
 			INSERT INTO MovieVector
 			SELECT
@@ -57,7 +57,11 @@ BEGIN
 
 		BEGIN CATCH
 
-			PRINT 'An error occurred attempting to vectorize the movie'
+			RAISERROR('An error occurred attempting to vectorize the movie', 0, 1) WITH NOWAIT
+
+			SET @Message = ERROR_MESSAGE()
+			RAISERROR(@Message, 0, 1) WITH NOWAIT
+
 			SET @ErrorCount +=1
 
 		END CATCH

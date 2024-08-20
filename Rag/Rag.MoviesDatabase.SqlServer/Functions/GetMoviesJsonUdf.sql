@@ -1,7 +1,14 @@
-CREATE FUNCTION GetMoviesJsonUdf(@MovieId int)
+CREATE FUNCTION GetMoviesJsonUdf(@MovieIdsCsv varchar(max))
 RETURNS varchar(max)
 AS
 BEGIN
+
+    DECLARE @MovieIds table (MovieId int)
+    INSERT INTO @MovieIds
+        SELECT CONVERT(int, value) AS MovieId
+        FROM STRING_SPLIT(@MovieIdsCsv, ',')
+
+    DECLARE @MovieCount int = @@ROWCOUNT
 
     DECLARE @MoviesJson varchar(max) = (
         SELECT
@@ -65,11 +72,12 @@ BEGIN
         FROM 
             Movie AS m
         WHERE
-            (@MovieId IS NULL OR m.MovieId = @MovieId)
+            (@MovieCount = 0) OR
+            (@MovieCount > 0 AND EXISTS (SELECT 1 FROM @MovieIds AS ids WHERE ids.MovieId = m.MovieId))
         FOR JSON PATH
     )
 
-    IF @MovieId IS NOT NULL AND LEFT(@MoviesJson, 1) = '[' AND RIGHT(@MoviesJson, 1) = ']'
+    IF @MovieCount = 1
         SET @MoviesJson = SUBSTRING(@MoviesJson, 2, LEN(@MoviesJson) - 2)
 
     RETURN @MoviesJson

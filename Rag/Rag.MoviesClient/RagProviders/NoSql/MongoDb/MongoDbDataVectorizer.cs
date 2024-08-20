@@ -14,7 +14,7 @@ namespace Rag.MoviesClient.RagProviders.NoSql.MongoDb
 			public static double RuCost;
 		}
 
-		protected override async Task VectorizeMovies(int? movieId)
+		protected override async Task VectorizeMovies(int[] movieIds)
 		{
 			Debugger.Break();
 

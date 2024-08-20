@@ -100,12 +100,7 @@ BEGIN
 	FROM
 		#Movie AS t
 	WHERE
-		DupeNumber = 1 AND
-		NOT EXISTS (
-			SELECT 1 
-			FROM Movie AS m
-			WHERE m.MovieId = t.MovieId
-		)
+		DupeNumber = 1
 
 	RAISERROR('Populating Genre and MovieGenre tables', 0, 1) WITH NOWAIT
 

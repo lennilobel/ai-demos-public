@@ -13,13 +13,13 @@ using System.Threading.Tasks;
 
 namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
 {
-	public class CosmosDbDataPopulator : RagProviderBase, IDataPopulator
+	public class CosmosDbDataPopulator : IDataPopulator
     {
         public async Task LoadData()
         {
             Debugger.Break();
 
-			base.ConsoleWriteHeading("Load Data", ConsoleColor.Yellow);
+			ConsoleOutput.WriteHeading("Load Data", ConsoleColor.Yellow);
 			
             var database = await this.DropAndCreateDatabase();
             var container = await this.CreateContainer(database);
@@ -34,14 +34,14 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
             try
             {
                 await Shared.CosmosClient.GetDatabase(databaseName).DeleteAsync();
-				base.ConsoleWriteLine($"Deleted existing '{databaseName}' database");
+				ConsoleOutput.WriteLine($"Deleted existing '{databaseName}' database");
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound) { }
 
             await Shared.CosmosClient.CreateDatabaseAsync(databaseName);
             var database = Shared.CosmosClient.GetDatabase(databaseName);
 
-            base.ConsoleWriteLine($"Created '{databaseName}' database");
+            ConsoleOutput.WriteLine($"Created '{databaseName}' database");
 
             return database;
         }
@@ -95,7 +95,7 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
             await database.CreateContainerAsync(containerProperties, containerThroughput);
             var container = database.GetContainer(containerName);
 
-            base.ConsoleWriteLine($"Created '{containerName}' container");
+            ConsoleOutput.WriteLine($"Created '{containerName}' container");
 
             return container;
         }
@@ -104,7 +104,7 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
 		{
 			Debugger.Break();
 
-			base.ConsoleWriteHeading("Update Data", ConsoleColor.Yellow);
+			ConsoleOutput.WriteHeading("Update Data", ConsoleColor.Yellow);
 
 			var container = Shared.CosmosClient.GetContainer(
 				Shared.AppConfig.CosmosDb.DatabaseName,
@@ -136,21 +136,21 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
                         }
                         else
                         {
-							base.ConsoleWriteLine($"Error creating document id='{document["id"]}', title='{document["title"]}'\n{t.Exception.Message}", ConsoleColor.Red);
+							ConsoleOutput.WriteLine($"Error creating document id='{document["id"]}', title='{document["title"]}'\n{t.Exception.Message}", ConsoleColor.Red);
                             errors++;
                         }
                     }));
             }
             await Task.WhenAll(tasks);
 
-			base.ConsoleWriteLine($"Created {count - errors} document(s) with {errors} error(s): {cost:0.##} RUs in {DateTime.Now.Subtract(started)}");
+			ConsoleOutput.WriteLine($"Created {count - errors} document(s) with {errors} error(s): {cost:0.##} RUs in {DateTime.Now.Subtract(started)}");
         }
 
         public async Task ResetData()
         {
             Debugger.Break();
 
-			base.ConsoleWriteHeading("Reset Data", ConsoleColor.Yellow);
+			ConsoleOutput.WriteHeading("Reset Data", ConsoleColor.Yellow);
 			
             var container = Shared.CosmosClient.GetContainer(Shared.AppConfig.CosmosDb.DatabaseName, Shared.AppConfig.CosmosDb.ContainerName);
 
@@ -161,7 +161,7 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
             foreach (var id in ids)
             {
                 await container.DeleteItemAsync<object>(id, new PartitionKey("movie"));
-				base.ConsoleWriteLine($"Deleted movie ID {id}");
+				ConsoleOutput.WriteLine($"Deleted movie ID {id}");
             }
         }
 

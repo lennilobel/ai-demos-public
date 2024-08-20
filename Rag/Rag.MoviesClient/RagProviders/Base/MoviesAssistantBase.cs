@@ -1,6 +1,7 @@
 using Azure.AI.OpenAI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Rag.MoviesClient.Config;
 using System;
 using System.Diagnostics;
 using System.Text;
@@ -9,22 +10,11 @@ using System.Threading.Tasks;
 
 namespace Rag.MoviesClient.RagProviders.Base
 {
-	public abstract class MoviesAssistantBase : RagProviderBase, IMoviesAssistant
+	public abstract class MoviesAssistantBase : IMoviesAssistant
 	{
-		// UX behavior
-		protected readonly bool _showInternalOperations = false;     // Display internal operations (completion messages, vector search)
-		private readonly bool _streamOutput = true;                  // Stream output to simulate reading and writing
-		private readonly bool _interactive = true;                   // Wait for the user to press Enter for each question
+		private readonly bool _interactive = true;	// Wait for the user to press Enter for each question
+		private readonly bool _streamOutput = true; // Stream output to simulate reading and writing
 
-		// AI behavior
-		private readonly string _includeDetails = "genre";           // Be specific about what movie info to be included in the response
-		private readonly bool _noEmojis = false;                     // Don't include emojies in the response
-		private readonly bool _noMarkdown = false;                   // Don't format markdown in the response
-		private readonly bool _generatePosterImage = false;          // Generate a movie poster based on the response (DALL-E)
-		private readonly string _demeanor = "upbeat and friendly";   // Set the language tone of the AI responses
-		private readonly string _responseLanguage = "English";       // Translate the natural language response to any other language
-
-		// Timings
 		protected TimeSpan _elapsedVectorizeQuestion;
 		protected TimeSpan _elapsedRunVectorSearch;
 		private TimeSpan _elapsedGenerateAnswer;
@@ -71,9 +61,7 @@ namespace Rag.MoviesClient.RagProviders.Base
 
 		private void SayHello()
 		{
-			Console.OutputEncoding = Encoding.UTF8;
 			Console.Clear();
-
 			Console.ForegroundColor = ConsoleColor.Cyan;
 			Console.WriteLine(@"  __  __            _                  _            _     _              _   ");
 			Console.WriteLine(@" |  \/  | _____   _(_) ___  ___       / \   ___ ___(_)___| |_ __ _ _ __ | |_ ");
@@ -81,7 +69,7 @@ namespace Rag.MoviesClient.RagProviders.Base
 			Console.WriteLine(@" | |  | | (_) \ V /| |  __/\__ \    / ___ \\__ \__ \ \__ \ || (_| | | | | |_ ");
 			Console.WriteLine(@" |_|  |_|\___/ \_/ |_|\___||___/   /_/   \_\___/___/_|___/\__\__,_|_| |_|\__|");
 			Console.WriteLine();
-			Console.WriteLine(@$"   {RagProviderFactory.GetProviderName()} Edition");
+			Console.WriteLine(@$"   Edition: {RagProviderFactory.GetProviderName()}");
 			Console.WriteLine();
 			Console.ResetColor();
 		}
@@ -102,22 +90,22 @@ namespace Rag.MoviesClient.RagProviders.Base
 		{
 			var sb = new StringBuilder();
 			sb.AppendLine($"You are a movies enthusiast who helps people discover films that they would enjoy watching.");
-			sb.AppendLine($"Your demeanor is {_demeanor}.");
-			sb.AppendLine($"Only include the following details of each movie recommendation: title, year, overview, {_includeDetails}.");
+			sb.AppendLine($"Your demeanor is {DemoConfig.Instance.Demeanor}.");
+			sb.AppendLine($"Only include the following details of each movie recommendation: title, year, overview, {DemoConfig.Instance.IncludeDetails}.");
 
-			if (this._noEmojis)
+			if (DemoConfig.Instance.NoEmojis)
 			{
 				sb.AppendLine("Don't include emojis, because they won't render in my demo console application.");
 			}
 
-			if (this._noMarkdown)
+			if (DemoConfig.Instance.NoMarkdown)
 			{
 				sb.AppendLine("Don't include markdown syntax, because it won't render in my demo console application.");
 			}
 
-			if (this._responseLanguage != "English")
+			if (DemoConfig.Instance.ResponseLanguage != "English")
 			{
-				sb.AppendLine($"Translate your recommendations in {this._responseLanguage}; don't include the recommendations in English. ");
+				sb.AppendLine($"Translate your recommendations in {DemoConfig.Instance.ResponseLanguage}; don't include the recommendations in English. ");
 			}
 
 			var prompt = sb.ToString();
@@ -129,8 +117,8 @@ namespace Rag.MoviesClient.RagProviders.Base
 
 		private string GetQuestion()
 		{
-			base.ConsoleWriteHeading("USER QUESTION", ConsoleColor.Yellow);
-			base.ConsoleWriteLine("[A] = Auto / [M] = Manual / [ESC] = Quit: ", suppressLineFeed: true);
+			ConsoleOutput.WriteHeading("User Question", ConsoleColor.Yellow);
+			ConsoleOutput.WriteLine("[A] = Auto / [M] = Manual / [ESC] = Quit: ", suppressLineFeed: true);
 
 			if (this._interactive)
 			{
@@ -156,7 +144,7 @@ namespace Rag.MoviesClient.RagProviders.Base
 				{
 					while (true)
 					{
-						base.ConsoleWriteLine("> ", ConsoleColor.Yellow, suppressLineFeed: true);
+						ConsoleOutput.WriteLine("> ", ConsoleColor.Yellow, suppressLineFeed: true);
 						Console.ForegroundColor = ConsoleColor.Yellow;
 						var question = Console.ReadLine();
 						if (!string.IsNullOrWhiteSpace(question))
@@ -176,7 +164,7 @@ namespace Rag.MoviesClient.RagProviders.Base
 
 			this.ConsoleWriteStreamedLine($"> {autoQuestion} ", ConsoleColor.Yellow, streamChunkSize: 1, suppressLineFeed: true);
 			Thread.Sleep(500);
-			base.ConsoleWriteLine();
+			ConsoleOutput.WriteLine();
 
 			return autoQuestion;
 		}
@@ -191,20 +179,20 @@ namespace Rag.MoviesClient.RagProviders.Base
 
 			this.ConsoleWriteAssistantResponse(answer);
 
-			if (this._generatePosterImage)
+			if (DemoConfig.Instance.GeneratePosterImage)
 			{
 				// Generate an image based on the results (DALL-E model)
 				await this.GeneratePosterImage(results);
 			}
 
 			// Done
-			base.ConsoleWriteLine();
-			base.ConsoleWriteLine($"Vectorized question:     {this._elapsedVectorizeQuestion}");
-			base.ConsoleWriteLine($"Ran vector search:       {this._elapsedRunVectorSearch}");
-			base.ConsoleWriteLine($"Generated response:      {this._elapsedGenerateAnswer}");
-			if (this._generatePosterImage)
+			ConsoleOutput.WriteLine();
+			ConsoleOutput.WriteLine($"Vectorized question:     {this._elapsedVectorizeQuestion}");
+			ConsoleOutput.WriteLine($"Ran vector search:       {this._elapsedRunVectorSearch}");
+			ConsoleOutput.WriteLine($"Generated response:      {this._elapsedGenerateAnswer}");
+			if (DemoConfig.Instance.GeneratePosterImage)
 			{
-				base.ConsoleWriteLine($"Generated poster image:  {this._elapsedGeneratePoster}");
+				ConsoleOutput.WriteLine($"Generated poster image:  {this._elapsedGeneratePoster}");
 			}
 		}
 
@@ -227,8 +215,8 @@ namespace Rag.MoviesClient.RagProviders.Base
 			}
 			catch (Exception ex)
 			{
-				base.ConsoleWriteLine("Error generating vector embeddings", ConsoleColor.Red);
-				base.ConsoleWriteLine(ex.Message, ConsoleColor.Red);
+				ConsoleOutput.WriteLine("Error generating vector embeddings", ConsoleColor.Red);
+				ConsoleOutput.WriteLine(ex.Message, ConsoleColor.Red);
 			}
 
 			this._elapsedVectorizeQuestion = DateTime.Now.Subtract(started);
@@ -250,14 +238,27 @@ namespace Rag.MoviesClient.RagProviders.Base
 			this.ConsoleWriteWaitingFor("Generating response");
 
 			var sb = new StringBuilder();
-			sb.AppendLine($"The database returned the following recommendations after being asked '{question}'.");
+			sb.AppendLine($"The movies database returned recommendations after being asked '{question}'.");
 			sb.AppendLine($"Generate a natural language response of these recommendations.");
-			sb.AppendLine($"Limit your response to the information in the recommendations returned by the database.");
+			sb.AppendLine($"Limit your response to the recommendations returned by the database; do not embellish with any other information.");
+			sb.AppendLine($"Phrase your response as though you are making the recommendations, rather than the database.");
+			sb.AppendLine($"List the recommendations in order of most similar to least similar.");
+			sb.AppendLine();
 
-			foreach (var result in results)
+			if (results.Length == 0)
 			{
-				sb.AppendLine(JsonConvert.SerializeObject(result));
+				sb.AppendLine($"The database has no recommendations.");
+			}
+			else
+			{
+				sb.AppendLine($"The database recommendations are:");
 				sb.AppendLine();
+
+				foreach (var result in results)
+				{
+					sb.AppendLine(JsonConvert.SerializeObject(result));
+					sb.AppendLine();
+				}
 			}
 
 			var userMessagePrompt = sb.ToString();
@@ -309,8 +310,8 @@ namespace Rag.MoviesClient.RagProviders.Base
 			}
 			catch (Exception ex)
 			{
-				base.ConsoleWriteLine("Error generating poster image", ConsoleColor.Red);
-				base.ConsoleWriteLine(ex.Message, ConsoleColor.Red);
+				ConsoleOutput.WriteLine("Error generating poster image", ConsoleColor.Red);
+				ConsoleOutput.WriteLine(ex.Message, ConsoleColor.Red);
 			}
 
 			this._elapsedGeneratePoster = DateTime.Now.Subtract(started);
@@ -321,7 +322,7 @@ namespace Rag.MoviesClient.RagProviders.Base
 			}
 
 			var generatedImage = response.Value.Data[0];
-			if (!string.IsNullOrEmpty(generatedImage.RevisedPrompt) && this._showInternalOperations)
+			if (!string.IsNullOrEmpty(generatedImage.RevisedPrompt) && DemoConfig.Instance.ShowInternalOperations)
 			{
 				this.ConsoleWritePromptMessage($"Input prompt revised to:\n{generatedImage.RevisedPrompt}");
 			}
@@ -343,7 +344,7 @@ namespace Rag.MoviesClient.RagProviders.Base
 			}
 			catch (Exception ex)
 			{
-				base.ConsoleWriteLine($"Error opening browser: {ex.Message}", ConsoleColor.Red);
+				ConsoleOutput.WriteLine($"Error opening browser: {ex.Message}", ConsoleColor.Red);
 			}
 		}
 
@@ -351,29 +352,29 @@ namespace Rag.MoviesClient.RagProviders.Base
 
 		private void ConsoleWritePromptMessage(string text)
 		{
-			if (!this._showInternalOperations)
+			if (!DemoConfig.Instance.ShowInternalOperations)
 			{
 				return;
 			}
 
-			this.ConsoleWriteHeading("PROMPT MESSAGE", ConsoleColor.Magenta);
-			base.ConsoleWriteLine(text, ConsoleColor.Magenta);
+			ConsoleOutput.WriteHeading("Prompt Message", ConsoleColor.Magenta);
+			ConsoleOutput.WriteLine(text, ConsoleColor.Magenta);
 		}
 
 		private void ConsoleWriteAssistantResponse(string text)
 		{
-			if (!this._showInternalOperations)
+			if (!DemoConfig.Instance.ShowInternalOperations)
 			{
 				this.ConsoleClearLine();
 			}
 
-			this.ConsoleWriteHeading("ASSISTANT RESPONSE", ConsoleColor.Cyan);
+			ConsoleOutput.WriteHeading("Assistant Response", ConsoleColor.Cyan);
 			this.ConsoleWriteStreamedLine(text, ConsoleColor.Cyan, streamChunkSize: 10);
 		}
 
 		protected void ConsoleWriteWaitingFor(string text)
 		{
-			if (this._showInternalOperations)
+			if (DemoConfig.Instance.ShowInternalOperations)
 			{
 				return;
 			}

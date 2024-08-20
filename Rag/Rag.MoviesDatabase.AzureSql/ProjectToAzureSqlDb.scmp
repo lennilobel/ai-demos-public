@@ -3,8 +3,8 @@
   <Version>10</Version>
   <SourceModelProvider>
     <ProjectBasedModelProvider>
-      <ProjectGuid>{6c2d2463-969f-42f0-8f15-b0f0b09ad242}</ProjectGuid>
-      <Name>AzureSqlDb.Rag.MoviesDatabase</Name>
+      <ProjectGuid>{53e43451-2202-40c8-9967-09cab915af1f}</ProjectGuid>
+      <Name>Rag.MoviesDatabase.AzureSql</Name>
     </ProjectBasedModelProvider>
   </SourceModelProvider>
   <TargetModelProvider>

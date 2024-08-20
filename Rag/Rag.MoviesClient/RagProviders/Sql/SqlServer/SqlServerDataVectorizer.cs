@@ -13,34 +13,21 @@ namespace Rag.MoviesClient.RagProviders.Sql.SqlServer
 {
 	public class SqlServerDataVectorizer : DataVectorizerBase
 	{
-		protected override async Task VectorizeMovies(int? movieId)
+		protected override async Task VectorizeMovies(int[] movieIds)
 		{
 			Debugger.Break();
 
 			var moviesJson = default(string);
 			await SqlDataAccess.RunStoredProcedure(
 				storedProcedureName: "GetMoviesJson",
-				storedProcedureParameters: movieId == null ? null : new (string, object)[] { ("@MovieId", movieId) },
+				storedProcedureParameters: [("@MovieIdsCsv", movieIds == null ? null : string.Join(',', movieIds))],
 				getResult: rdr => moviesJson = rdr.GetString(0)
 			);
 
-			if (movieId == null)
-			{
-				await this.VectorizeAllMovies(moviesJson);
-			}
-			else
-			{
-				await this.VectorizeMovie(moviesJson);
-			}
-        }
-
-		private async Task VectorizeAllMovies(string moviesJson)
-		{
 			var moviesArray = JsonConvert.DeserializeObject<JObject[]>(moviesJson);
-			base.ConsoleWriteLine($"Vectorizing {moviesArray.Length} movie(s)", ConsoleColor.Yellow);
+			ConsoleOutput.WriteLine($"Vectorizing {moviesArray.Length} movie(s)", ConsoleColor.Yellow);
 
 			const int BatchSize = 100;
-			var count = 0;
 			for (var i = 0; i < moviesArray.Length; i += BatchSize)
 			{
 				var batchStarted = DateTime.Now;
@@ -56,49 +43,30 @@ namespace Rag.MoviesClient.RagProviders.Sql.SqlServer
 
 				var batchElapsed = DateTime.Now.Subtract(batchStarted);
 
-				base.ConsoleWriteLine($"Processed rows {count - documents.Length + 1} - {count} in {batchElapsed}", ConsoleColor.Cyan);
+				ConsoleOutput.WriteLine($"Processed rows {i + 1} - {i + documents.Length} in {batchElapsed}", ConsoleColor.Cyan);
 			}
-		}
-
-		private async Task VectorizeMovie(string moviesJson)
-		{
-			// Get movie document
-			var movie = JsonConvert.DeserializeObject<JObject>(moviesJson);
-
-			// Generate text embeddings (vectors) for the document
-			var embeddings = await this.GenerateEmbeddings([movie]);
-
-			// Update the database with generated text embeddings (vectors) for the document
-			await this.SaveVectors([movie], embeddings);
 		}
 
 		private async Task<IReadOnlyList<EmbeddingItem>> GenerateEmbeddings(JObject[] documents)
         {
-            base.ConsoleWrite($"Generating embeddings... ", ConsoleColor.Green);
+            ConsoleOutput.Write($"Generating embeddings... ", ConsoleColor.Green);
 
             // Generate embeddings based on the textual content of each document
-            var texts = documents.Select(
-                d => d.ToString()
-                    .Replace('{', ' ')
-                    .Replace('}', ' ')
-                    .Replace('"', ' ')
-                ).ToArray();
-
             var embeddingsOptions = new EmbeddingsOptions(
                 deploymentName: Shared.AppConfig.OpenAI.EmbeddingsDeploymentName,
-                input: texts);
+                input: documents.Select(d => d.ToString()).ToArray());
 
             var openAIEmbeddings = await Shared.OpenAIClient.GetEmbeddingsAsync(embeddingsOptions);
             var embeddings = openAIEmbeddings.Value.Data;
 
-			base.ConsoleWriteLine(embeddings.Count, ConsoleColor.Green);
+			ConsoleOutput.WriteLine(embeddings.Count, ConsoleColor.Green);
 			
             return embeddings;
         }
 
         private async Task SaveVectors(JObject[] documents, IReadOnlyList<EmbeddingItem> embeddings)
         {
-			base.ConsoleWriteLine("Saving vectors", ConsoleColor.Green);
+			ConsoleOutput.WriteLine("Saving vectors", ConsoleColor.Green);
 
 			var movieVectors = new DataTable();
 

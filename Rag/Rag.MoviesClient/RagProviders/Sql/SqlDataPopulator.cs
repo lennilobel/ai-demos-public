@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Rag.MoviesClient.RagProviders.Sql
 {
-	public class SqlDataPopulator : RagProviderBase, IDataPopulator
+	public class SqlDataPopulator : IDataPopulator
 	{
 		public async Task LoadData()
 		{
@@ -17,16 +17,16 @@ namespace Rag.MoviesClient.RagProviders.Sql
 
 			var started = DateTime.Now;
 
-			base.ConsoleWriteHeading("Load Data", ConsoleColor.Yellow);
+			ConsoleOutput.WriteHeading("Load Data", ConsoleColor.Yellow);
 
-			base.ConsoleWriteLine("Deleting all data", ConsoleColor.Yellow);
+			ConsoleOutput.WriteLine("Deleting all data", ConsoleColor.Yellow);
 			await SqlDataAccess.RunStoredProcedure("DeleteAllData");
 
 			await this.LoadDataFromJsonFile("movies.json");
 
 			var elapsed = DateTime.Now.Subtract(started);
-			base.ConsoleWriteLine();
-			base.ConsoleWriteLine($"Data loaded in {elapsed}", ConsoleColor.Yellow);
+			ConsoleOutput.WriteLine();
+			ConsoleOutput.WriteLine($"Data loaded in {elapsed}", ConsoleColor.Yellow);
 		}
 
 		public async Task UpdateData()
@@ -35,7 +35,7 @@ namespace Rag.MoviesClient.RagProviders.Sql
 
 			var started = DateTime.Now;
 
-			base.ConsoleWriteHeading("Update Data", ConsoleColor.Yellow);
+			ConsoleOutput.WriteHeading("Update Data", ConsoleColor.Yellow);
 
 			// Load additional movies into the database
 			await this.LoadDataFromJsonFile("movies-sw.json");
@@ -45,20 +45,17 @@ namespace Rag.MoviesClient.RagProviders.Sql
 			var movieIds = documents.Select(d => ((JObject)d)["id"].Value<int>()).ToArray();
 
 			var vectorizer = RagProviderFactory.GetDataVectorizer();
-			foreach (var movieId in movieIds)
-			{
-				await vectorizer.VectorizeData(movieId);
-			}
+			await vectorizer.VectorizeData(movieIds);
 
 			var elapsed = DateTime.Now.Subtract(started);
-			base.ConsoleWriteLine();
-			base.ConsoleWriteLine($"Data updated in {elapsed}", ConsoleColor.Cyan);
+			ConsoleOutput.WriteLine();
+			ConsoleOutput.WriteLine($"Data updated in {elapsed}", ConsoleColor.Cyan);
 		}
 
 		private async Task LoadDataFromJsonFile(string filename)
 		{
-			base.ConsoleWriteLine();
-			base.ConsoleWriteLine($"Loading data from {filename}", ConsoleColor.Yellow);
+			ConsoleOutput.WriteLine();
+			ConsoleOutput.WriteLine($"Loading data from {filename}", ConsoleColor.Yellow);
 
 			filename = RagProviderFactory.GetDataFilePath(filename);
 
@@ -71,7 +68,7 @@ namespace Rag.MoviesClient.RagProviders.Sql
 		{
 			Debugger.Break();
 
-			base.ConsoleWriteHeading("Reset Data", ConsoleColor.Yellow);
+			ConsoleOutput.WriteHeading("Reset Data", ConsoleColor.Yellow);
 
 			await SqlDataAccess.RunStoredProcedure("DeleteStarWarsTrilogy");
 		}

@@ -16,7 +16,7 @@ BEGIN
 		@response = @Response OUTPUT
 
 	IF @ReturnValue != 0
-		THROW 50000, 'An error occurred attempting to vectorize the text', 1
+		THROW 50000, @Response, 1
 
 	DECLARE @QuestionVectors table (
 		VectorValueId int,

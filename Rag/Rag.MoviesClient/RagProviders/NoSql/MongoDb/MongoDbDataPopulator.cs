@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 
 namespace Rag.MoviesClient.RagProviders.NoSql.MongoDb
 {
-	public class MongoDbDataPopulator : RagProviderBase, IDataPopulator
+	public class MongoDbDataPopulator : IDataPopulator
     {
         public async Task LoadData()
         {
             Debugger.Break();
 
-			base.ConsoleWriteHeading("Load Data", ConsoleColor.Yellow);
+			ConsoleOutput.WriteHeading("Load Data", ConsoleColor.Yellow);
 
 			// Create new database and container
 			// Load movie documents to from Data\movies.json (all movies)
@@ -23,7 +23,7 @@ namespace Rag.MoviesClient.RagProviders.NoSql.MongoDb
         {
             Debugger.Break();
 
-			base.ConsoleWriteHeading("Update Data", ConsoleColor.Yellow);
+			ConsoleOutput.WriteHeading("Update Data", ConsoleColor.Yellow);
 
 			// Load movie documents to from Data\movies-sw.json (three Star Wars trilogy movies)
 
@@ -34,7 +34,7 @@ namespace Rag.MoviesClient.RagProviders.NoSql.MongoDb
         {
             Debugger.Break();
 
-			base.ConsoleWriteHeading("Reset Data", ConsoleColor.Yellow);
+			ConsoleOutput.WriteHeading("Reset Data", ConsoleColor.Yellow);
 
 			// Delete the three Star Wars trilogy movies from the container
 

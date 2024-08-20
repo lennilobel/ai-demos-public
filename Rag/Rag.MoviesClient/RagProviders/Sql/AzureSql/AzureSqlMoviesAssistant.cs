@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Rag.MoviesClient.Config;
 using Rag.MoviesClient.RagProviders.Base;
 using System;
 using System.Collections.Generic;
@@ -32,19 +33,19 @@ namespace Rag.MoviesClient.RagProviders.Sql.AzureSql
 				getResult: rdr =>
 				{
 					counter++;
-					if (base._showInternalOperations && counter == 1)
+					if (DemoConfig.Instance.ShowInternalOperations && counter == 1)
 					{
-						base.ConsoleWriteHeading("AZURE SQL DB VECTOR SEARCH RESULT", ConsoleColor.Green);
+						ConsoleOutput.WriteHeading("Azure SQL Database Vector Search Result", ConsoleColor.Green);
 					}
 
 					var resultJson = rdr["MovieJson"].ToString();
 					var result = JsonConvert.DeserializeObject<JObject>(resultJson);
 					results.Add(result);
 
-					if (base._showInternalOperations)
+					if (DemoConfig.Instance.ShowInternalOperations)
 					{
-						base.ConsoleWriteLine($"{++counter}. {result["Title"]}", ConsoleColor.Green);
-						base.ConsoleWriteLine(JsonConvert.SerializeObject(result));
+						ConsoleOutput.WriteLine($"{++counter}. {result["Title"]}", ConsoleColor.Green);
+						ConsoleOutput.WriteLine(JsonConvert.SerializeObject(result));
 					}
 				},
 				silent: true
