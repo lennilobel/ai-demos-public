@@ -1,6 +1,6 @@
 # RAG Solution
 
-This is a provider-based RAG solution that uses OpenAI and supports the following back-end database platforms:
+This is a provider-based RAG solution that leverages Azure OpenAI and supports the following back-end database platforms:
 - SQL Server 2022
 - Azure SQL Database
 - Azure Cosmos DB for NoSQL
