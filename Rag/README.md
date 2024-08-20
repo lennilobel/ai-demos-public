@@ -196,3 +196,76 @@ To use the RAG solution with Azure Cosmos DB for NoSQL, you'll need to first upd
     }
   }
   ```
+
+## Running the Demo Solution
+
+### Start the Movies Client
+
+- Run the `Rag.MoviesClient` project.
+  - All the primary functionality is contained in this one console application.
+
+- Select the RAG provider for your database platform.
+  - Type the "change edition" command `CE [provider]`, replacing [provider] with:
+    - `SqlServer` (SQL Server 2022)
+    - `AzureSql` (Azure SQL Database)
+    - `CosmosDb` (Azure Cosmos DB for NoSQL)
+    - `MongoDb` (Azure Cosmos DB for MongoDB vCore)
+  - The provider is set to `SqlServer` by default, but you can select any provider as the default to any provider by changing the `RagProvider` property in `appsettings.json`.
+  
+### Load the Initial Data
+
+- Type the "load data" command `LD`.
+  - This will delete all existing data in the database, and populate the database with all the movies in `movies.json`.
+
+- Test out searching before vectorization.
+  - Type the "movies assistant" command `MA`.
+  - Try asking any question, and observe that the response explains that there are no results.
+
+### Vectorize the Initial Data
+
+- Type the "reset data" command `RD`.
+  - This removes the three original Star Wars trilogy movies from the database.
+  - You will re-add them and vectorize them in a later step.
+  
+- Type the "vectorize data" command `VD`.
+  - This will vectorize all the movies (except for the three deleted Star Wars movies).
+  - The process typically takes approximately 15-25 minutes.
+
+### Get Movie Recommendations
+
+- Type the "movies assistant" command `MA`.
+  - Press the `A` key to trigger the first automatic question about sci-fi movies.
+  - Press `A` again to ask the next question about Star Wars in particular.
+  - Press `A` once more to ask specifically about the original Star Wars trilogy.
+- Observe how the last response explains that those movies are not in the database.
+- Press `Esc` to exit the movies assistant and return to the menu.
+
+### Incrementally Add and Vectorize New Data
+
+- If you're using Azure Cosmos DB for NoSQL
+  - Start the `Rag.MoviesFunction.CosmosDb` project.
+  - This runs an Azure Function (in your local environment) that listens on the container's change feed for new/updated documents to be (re-)vectorized.
+
+- Type the "update data" command `UD`.
+  - This loads the three original Star Wars trilogy movies from `movies-sw.json` into the database.
+  - If you're using Azure Cosmos DB for NoSQL, observe that the Azure Function wakes up and automatically vectorizes the new movie documents.
+  - Providers for the other database platforms explicitly vectorize the new movies after loading them from the JSON file.
+
+- Type the "movies assistant" command `MA`.
+  - Press the `A` key to trigger the first automatic question about sci-fi movies.
+  - Press `A` again to ask the next question about Star Wars in particular.
+  - Press `A` once more to ask specifically about the original Star Wars trilogy.
+- Observe how the last response provides recommendations for the trilogy.
+
+### Experiment with Different Prompts
+
+- Press `Esc` to exit the movies assistant and return to the menu.
+- Type the "update configuration" command `UC`.
+- Change the **ShowInternalOperations** property to **true**.
+  - This causes the movies assistant to display the prompts and other behind-the-scenes information, as it processes each question.
+- Experiment with different values for these other properties to change the behavior of the movies assistant:
+  - **Demeanor** - sets the language tone of the AI responses
+  - **IncludeDetails** - specifies details (for example, "genre, language, run-time") to be included with each recommendation (in addition to title, year, and overview).
+  - **NoEmojis** - if true, prompts the assistant not to include emoji characters in the response (which do not render properly in console applications).
+  - **NoMarkdown** - if true, prompts the assistant not to format the response with markdown characters (which do not get processed for rendering in console applications).
+  - **GeneratePosterImage** - if true, generates a poster image based on the movie recommendations provided for each question.
