@@ -2,6 +2,7 @@
 
 This is a provider-based RAG solution that leverages Azure OpenAI and supports the following back-end database platforms:
 - SQL Server 2022
+- Azure SQL Database
 - Azure SQL Database (EAP)
 - Azure Cosmos DB for NoSQL
 - Azure Cosmos DB for MongoDB vCore
@@ -33,8 +34,16 @@ Common functionality is implemented in a set of shared base classes, while indiv
 
 - Azure SQL Database loads the initial data by shredding a JSON file from Azure Blob Storage into relational tables.
 - Azure SQL Database calls OpenAI (via sp_invoke_external_rest_endpoint) to vectorize movies in the database and natural language questions posed by users.
-- Movie vectors are efficiently stored and indexed in a varbinary(max) column in the Movie table (EAP).
-- Vector searching is performed using the VECTOR_DISTANCE function (EAP).
+- Movie vectors are efficiently stored and indexed in a traditional columnstore index table related to the Movie table.
+- Vector searching is performed using a simple cosine distance algorithm.
+- The client application is responsible for coordinating vectorization with new movies as they are added/updated.
+
+**Azure SQL Database (EAP)**
+
+- Azure SQL Database loads the initial data by shredding a JSON file from Azure Blob Storage into relational tables.
+- Azure SQL Database calls OpenAI (via sp_invoke_external_rest_endpoint) to vectorize movies in the database and natural language questions posed by users.
+- Movie vectors are efficiently stored and indexed in a varbinary(8000) column in the Movie table.
+- Vector searching is performed using the VECTOR_DISTANCE function.
 - The client application is responsible for coordinating vectorization with new movies as they are added/updated.
 
 **Azure Cosmos DB for NoSQL**
@@ -47,7 +56,11 @@ Common functionality is implemented in a set of shared base classes, while indiv
 
 **Azure Cosmos DB for MongoDB vCore**
 
-- The Azure Cosmos DB for MongoDB vCore provider is not yet implemented.
+- The client application uses InsertMany to populate a collection of movie documents from a local JSON file.
+- The client application calls OpenAI to vectorize movies in the collection and natural language questions posed by users.
+- Movie vectors are stored in a vector array property in each movie document, and efficiently indexed using the IVF (Inverted File) algorithm.
+- Vector searching is performed using the native cosmosSearch function in an aggregation pipeline.
+- The client application is responsible for coordinating vectorization with new movies as they are added/updated.
 
 ## Environment Setup
 
@@ -85,13 +98,13 @@ Regardless of which database platform you're using, you'll need to configure an 
 To use the RAG solution with SQL Server 2022, you'll need to first initialize the sample database and update the application configuration file accordingly.
 
 **Initialize the sample database**
-- Use SSMS to create a new database named **RagDemo**.
+- Use SSMS to create a new database named **rag-demo**.
 - Open the **AIDemos** solution in Visual Studio.
 - Expand the **Rag** folder.
 - Expand the **Rag.MoviesDatabase.SqlServer** project.
 - Open the **ProjectToSqlServer.scmp** schema compare file.
 - In the target dropdown, choose **Select Target...**.
-- Connect to the new **RagDemo** database.
+- Connect to the new **rag-demo** database.
 - Click **Compare**.
 - Click **Update**.
 
@@ -102,14 +115,14 @@ To use the RAG solution with SQL Server 2022, you'll need to first initialize th
   ```json
     "SqlServer": {
       "ServerName": "[SERVER-NAME]",
-      "DatabaseName": "RagDemo",
+      "DatabaseName": "rag-demo",
       "Username": "[USERNAME]",
       "Password": "[PASSWORD]",
       "TrustServerCertificate": true
     }
     ```
 
-### Azure SQL Database (Early Adopter Preview)
+### Azure SQL Database
 
 To use the RAG solution with Azure SQL Database, you'll need to first save the JSON source files to Azure Blob Storage, initialize the sample database, and update the application configuration file accordingly.
 
@@ -139,13 +152,13 @@ To use the RAG solution with Azure SQL Database, you'll need to first save the J
   ```
 
 **Initialize the sample database**
-- Use the Azure portal to create a new database named **RagDemo**.
+- Use the Azure portal to create a new database named **rag-demo**.
 - Open the **AIDemos** solution in Visual Studio.
 - Expand the **Rag** folder.
 - Expand the **Rag.MoviesDatabase.AzureSql** project.
 - Open the **ProjectToAzureSql.scmp** schema compare file.
 - In the target dropdown, choose **Select Target...**.
-- Connect to the new **RagDemo** database.
+- Connect to the new **rag-demo** database.
 - Click **Compare**.
 - Click **Update**.
 
@@ -156,11 +169,15 @@ To use the RAG solution with Azure SQL Database, you'll need to first save the J
   ```json
   "AzureSql": {
     "ServerName": "[SERVER-NAME].database.windows.net",
-    "DatabaseName": "RagDemo",
+    "DatabaseName": "rag-demo",
     "Username": "[USERNAME]",
     "Password": "[PASSWORD]"
   }
   ```
+
+### Azure SQL Database (Early Adopter Program)
+
+To use the RAG solution with Azure SQL Database (EAP), follow the steps in the previous section for Azure SQL Database, but with the **Rag.MoviesDatabase.AzureSqlEap** project and the **AzureSqlEap** section in **appsettings.json**.
 
 ### Azure Cosmos DB for NoSQL
 
