@@ -1,6 +1,7 @@
 using Azure.AI.OpenAI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Rag.MoviesClient.EmbeddingModels;
 using Rag.MoviesClient.RagProviders.Base;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,10 @@ namespace Rag.MoviesClient.RagProviders.Sql.SqlServer
 			var moviesJson = default(string);
 			await SqlDataAccess.RunStoredProcedure(
 				storedProcedureName: "GetMoviesJson",
-				storedProcedureParameters: [("@MovieIdsCsv", movieIds == null ? null : string.Join(',', movieIds))],
+				storedProcedureParameters:
+				[
+					("@MovieIdsCsv", movieIds == null ? null : string.Join(',', movieIds))
+				],
 				getResult: rdr => moviesJson = rdr.GetString(0)
 			);
 
@@ -53,8 +57,9 @@ namespace Rag.MoviesClient.RagProviders.Sql.SqlServer
 
             // Generate embeddings based on the textual content of each document
             var embeddingsOptions = new EmbeddingsOptions(
-                deploymentName: Shared.AppConfig.OpenAI.EmbeddingsDeploymentName,
-                input: documents.Select(d => d.ToString()).ToArray());
+                deploymentName: EmbeddingModelFactory.GetDeploymentName(),
+                input: documents.Select(d => d.ToString()).ToArray()
+			);
 
             var openAIEmbeddings = await Shared.OpenAIClient.GetEmbeddingsAsync(embeddingsOptions);
             var embeddings = openAIEmbeddings.Value.Data;
@@ -93,7 +98,11 @@ namespace Rag.MoviesClient.RagProviders.Sql.SqlServer
 
 			await SqlDataAccess.RunStoredProcedure(
                 storedProcedureName: "CreateMovieVectors",
-                storedProcedureParameters: [("@MovieVectors", movieVectors)]);
+                storedProcedureParameters:
+				[
+					("@MovieVectors", movieVectors)
+				]
+			);
 		}
 
 	}

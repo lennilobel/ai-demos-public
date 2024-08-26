@@ -1,5 +1,6 @@
 using Microsoft.Data.SqlClient;
 using Rag.MoviesClient.Config;
+using Rag.MoviesClient.EmbeddingModels;
 using Rag.MoviesClient.RagProviders.Base;
 using Rag.MoviesClient.RagProviders.NoSql.CosmosDb;
 using Rag.MoviesClient.RagProviders.NoSql.MongoDb;
@@ -11,7 +12,7 @@ using System.IO;
 
 namespace Rag.MoviesClient.RagProviders
 {
-    public static class RagProviderFactory
+	public static class RagProviderFactory
 	{
 		public static RagProviderType RagProviderType { get; set; }
 
@@ -28,11 +29,14 @@ namespace Rag.MoviesClient.RagProviders
 		{
 			switch (RagProviderType)
 			{
+				case RagProviderType.SqlServer:
+					return "SQL Server";
+
 				case RagProviderType.AzureSql:
 					return "Azure SQL Database";
 
-				case RagProviderType.SqlServer:
-					return "SQL Server";
+				case RagProviderType.AzureSqlEap:
+					return "Azure SQL Database (EAP)";
 
 				case RagProviderType.CosmosDb:
 					return "Azure Cosmos DB for NoSQL";
@@ -41,15 +45,61 @@ namespace Rag.MoviesClient.RagProviders
 					return "Azure Cosmos DB for MongoDB vCore";
 			}
 
-			throw new NotSupportedException($"No data vectorizer is implemented for RAG provider type {RagProviderType}");
+			throw new NotSupportedException($"No provider name is implemented for RAG provider type {RagProviderType}");
+		}
+
+		public static string GetDatabaseName()
+		{
+			var suffix = GetDatabaseNameSuffix();
+
+			switch (RagProviderType)
+			{
+				case RagProviderType.SqlServer:
+					return Shared.AppConfig.SqlServer.DatabaseName + suffix;
+
+				case RagProviderType.AzureSql:
+					return Shared.AppConfig.AzureSql.DatabaseName + suffix;
+
+				case RagProviderType.AzureSqlEap:
+					return Shared.AppConfig.AzureSqlEap.DatabaseName + suffix;
+
+				case RagProviderType.CosmosDb:
+					return Shared.AppConfig.CosmosDb.DatabaseName + suffix;
+
+				case RagProviderType.MongoDb:
+					return Shared.AppConfig.MongoDb.DatabaseName + suffix;
+			}
+
+			throw new NotSupportedException($"No database name is implemented for RAG provider type {RagProviderType}");
+		}
+
+		private static string GetDatabaseNameSuffix()
+		{
+			switch (EmbeddingModelFactory.EmbeddingModelType)
+			{
+				case EmbeddingModelType.Default:
+					return string.Empty;
+
+				case EmbeddingModelType.TextEmbedding3Large:
+					return "-3l";
+
+				case EmbeddingModelType.TextEmbedding3Small:
+					return "-3s";
+
+				case EmbeddingModelType.TextEmbeddingAda002:
+					return "-ada";
+			}
+
+			throw new NotSupportedException($"No database name suffix is implemented for RAG provider type {RagProviderType}");
 		}
 
 		public static IDataPopulator GetDataPopulator()
 		{
 			switch (RagProviderType)
 			{
-				case RagProviderType.AzureSql:
 				case RagProviderType.SqlServer:
+				case RagProviderType.AzureSql:
+				case RagProviderType.AzureSqlEap:
 					return new SqlDataPopulator();
 
 				case RagProviderType.CosmosDb:
@@ -66,11 +116,12 @@ namespace Rag.MoviesClient.RagProviders
 		{
 			switch (RagProviderType)
 			{
-				case RagProviderType.AzureSql:
-					return new AzureSqlDataVectorizer();
-
 				case RagProviderType.SqlServer:
 					return new SqlServerDataVectorizer();
+
+				case RagProviderType.AzureSql:
+				case RagProviderType.AzureSqlEap:
+					return new AzureSqlDataVectorizer();
 
 				case RagProviderType.CosmosDb:
 					return new CosmosDbDataVectorizer();
@@ -86,11 +137,12 @@ namespace Rag.MoviesClient.RagProviders
 		{
 			switch (RagProviderType)
 			{
-				case RagProviderType.AzureSql:
-					return new AzureSqlMoviesAssistant();
-
 				case RagProviderType.SqlServer:
 					return new SqlServerMoviesAssistant();
+
+				case RagProviderType.AzureSql:
+				case RagProviderType.AzureSqlEap:
+					return new AzureSqlMoviesAssistant();
 
 				case RagProviderType.CosmosDb:
 					return new CosmosDbMoviesAssistant();
@@ -106,21 +158,24 @@ namespace Rag.MoviesClient.RagProviders
 		{
 			switch (RagProviderType)
 			{
-				case RagProviderType.AzureSql:
-					return BuildConnectionString(Shared.AppConfig.AzureSql);
-
 				case RagProviderType.SqlServer:
-					return BuildConnectionString(Shared.AppConfig.SqlServer);
+					return BuildSqlConnectionString(Shared.AppConfig.SqlServer);
+
+				case RagProviderType.AzureSql:
+					return BuildSqlConnectionString(Shared.AppConfig.AzureSql);
+
+				case RagProviderType.AzureSqlEap:
+					return BuildSqlConnectionString(Shared.AppConfig.AzureSqlEap);
 			}
 
 			throw new NotSupportedException($"No SQL connection string is available for RAG provider type {RagProviderType}");
 		}
 
-		private static string BuildConnectionString(AppConfig.SqlConfig config) =>
+		private static string BuildSqlConnectionString(AppConfig.SqlConfig config) =>
 			new SqlConnectionStringBuilder
 			{
 				DataSource = config.ServerName,
-				InitialCatalog = config.DatabaseName,
+				InitialCatalog = GetDatabaseName(),
 				UserID = config.Username,
 				Password = config.Password,
 				TrustServerCertificate = config.TrustServerCertificate
@@ -131,6 +186,7 @@ namespace Rag.MoviesClient.RagProviders
 			switch (RagProviderType)
 			{
 				case RagProviderType.AzureSql:
+				case RagProviderType.AzureSqlEap:
 					return filename;
 
 				case RagProviderType.SqlServer:

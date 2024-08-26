@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Rag.MoviesClient.Config;
+using Rag.MoviesClient.EmbeddingModels;
 using Rag.MoviesClient.RagProviders.Base;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 namespace Rag.MoviesClient.RagProviders.Sql.AzureSql
 {
 	public class AzureSqlMoviesAssistant : MoviesAssistantBase
-    {
+	{
 		protected override async Task<JObject[]> GetDatabaseResults(string question)
 		{
 			// Run a vector search in our database (Azure SQL Database via Embeddings API using a text embedding model)
@@ -19,17 +20,23 @@ namespace Rag.MoviesClient.RagProviders.Sql.AzureSql
 		}
 
 		private async Task<JObject[]> RunVectorSearch(string question)
-        {
-            var started = DateTime.Now;
+		{
+			var started = DateTime.Now;
 
-            base.ConsoleWriteWaitingFor("Running vector search");
+			base.ConsoleWriteWaitingFor("Running vector search");
 
-            var results = new List<JObject>();
+			var results = new List<JObject>();
 
 			var counter = 0;
 			await SqlDataAccess.RunStoredProcedure(
 				storedProcedureName: "AskQuestion",
-				storedProcedureParameters: [("@Question", question)],
+				storedProcedureParameters:
+				[
+					("@Question", question),
+					("@OpenAIEndpoint", Shared.AppConfig.OpenAI.Endpoint),
+					("@OpenAIApiKey", Shared.AppConfig.OpenAI.ApiKey),
+					("@OpenAIDeploymentName", EmbeddingModelFactory.GetDeploymentName()),
+				],
 				getResult: rdr =>
 				{
 					counter++;
@@ -44,7 +51,7 @@ namespace Rag.MoviesClient.RagProviders.Sql.AzureSql
 
 					if (DemoConfig.Instance.ShowInternalOperations)
 					{
-						ConsoleOutput.WriteLine($"{++counter}. {result["Title"]}", ConsoleColor.Green);
+						ConsoleOutput.WriteLine($"{++counter}. {result["Title"]} (similarity: {rdr["SimilarityScore"]})", ConsoleColor.Green);
 						ConsoleOutput.WriteLine(JsonConvert.SerializeObject(result));
 					}
 				},
@@ -54,7 +61,7 @@ namespace Rag.MoviesClient.RagProviders.Sql.AzureSql
 			base._elapsedRunVectorSearch = DateTime.Now.Subtract(started);
 
 			return results.ToArray();
-        }
+		}
 
-    }
+	}
 }

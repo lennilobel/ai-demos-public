@@ -29,7 +29,7 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
 
         private async Task<Database> DropAndCreateDatabase()
         {
-            var databaseName = Shared.AppConfig.CosmosDb.DatabaseName;
+            var databaseName = RagProviderFactory.GetDatabaseName();
 
             try
             {
@@ -84,7 +84,7 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
                         new VectorIndexPath
                         {
                             Path = "/vectors",              // property path to generated vector array
-                            Type = VectorIndexType.DiskANN  // disk-based approximate near neighbor
+                            Type = VectorIndexType.DiskANN  // use DiskANN (Disk-based Approximate Near Neighbor) algorithm
                         }
                     ]
                 }
@@ -100,28 +100,18 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
             return container;
         }
 
-		public async Task UpdateData()
-		{
-			Debugger.Break();
-
-			ConsoleOutput.WriteHeading("Update Data", ConsoleColor.Yellow);
-
-			var container = Shared.CosmosClient.GetContainer(
-				Shared.AppConfig.CosmosDb.DatabaseName,
-				Shared.AppConfig.CosmosDb.ContainerName);
-
-			await this.CreateDocuments(@"Data\movies-sw.json", container);      // Let the Azure Function wake to consume the change feed and vectorize the new documents
-		}
-
 		private async Task CreateDocuments(string jsonFilename, Container container)
         {
+			ConsoleOutput.WriteLine($"Creating documents from {jsonFilename}");
+
+			var started = DateTime.Now;
+			
             var json = await File.ReadAllTextAsync(jsonFilename);
             var documents = JsonConvert.DeserializeObject<JArray>(json);
             var count = documents.Count;
 
             var cost = 0D;
             var errors = 0;
-            var started = DateTime.Now;
 
             var tasks = new List<Task>(count);
             foreach (JObject document in documents)
@@ -136,7 +126,7 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
                         }
                         else
                         {
-							ConsoleOutput.WriteLine($"Error creating document id='{document["id"]}', title='{document["title"]}'\n{t.Exception.Message}", ConsoleColor.Red);
+							ConsoleOutput.WriteErrorLine($"Error creating document id='{document["id"]}', title='{document["title"]}'\n{t.Exception.Message}");
                             errors++;
                         }
                     }));
@@ -146,13 +136,29 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
 			ConsoleOutput.WriteLine($"Created {count - errors} document(s) with {errors} error(s): {cost:0.##} RUs in {DateTime.Now.Subtract(started)}");
         }
 
-        public async Task ResetData()
+		public async Task UpdateData()
+		{
+			Debugger.Break();
+
+			ConsoleOutput.WriteHeading("Update Data", ConsoleColor.Yellow);
+
+			var container = Shared.CosmosClient.GetContainer(
+				RagProviderFactory.GetDatabaseName(),
+				Shared.AppConfig.CosmosDb.ContainerName);
+
+			await this.CreateDocuments(@"Data\movies-sw.json", container);      // Let the Azure Function wake to consume the change feed and vectorize the new documents
+		}
+
+		public async Task ResetData()
         {
             Debugger.Break();
 
 			ConsoleOutput.WriteHeading("Reset Data", ConsoleColor.Yellow);
 			
-            var container = Shared.CosmosClient.GetContainer(Shared.AppConfig.CosmosDb.DatabaseName, Shared.AppConfig.CosmosDb.ContainerName);
+            var container = Shared.CosmosClient.GetContainer(
+                RagProviderFactory.GetDatabaseName(),
+                Shared.AppConfig.CosmosDb.ContainerName
+            );
 
             var iterator = container.GetItemQueryIterator<string>(
                 "SELECT VALUE c.id FROM c WHERE c.title IN ('Star Wars', 'The Empire Strikes Back', 'Return of the Jedi')");

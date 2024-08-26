@@ -2,6 +2,7 @@ using Azure.AI.OpenAI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Rag.MoviesClient.Config;
+using Rag.MoviesClient.EmbeddingModels;
 using System;
 using System.Diagnostics;
 using System.Text;
@@ -41,7 +42,7 @@ namespace Rag.MoviesClient.RagProviders.Base
 
 			this.SayHello();
 
-			var completionsOptions = this.InitializeCompletionOptions();
+			var completionsOptions = this.InitializeCompletionsOptions();
 
 			this.SetChatPrompt(completionsOptions);
 
@@ -55,7 +56,14 @@ namespace Rag.MoviesClient.RagProviders.Base
 					break;
 				}
 
-				await this.ProcessQuestion(question, completionsOptions);
+				try
+				{
+					await this.ProcessQuestion(question, completionsOptions);
+				}
+				catch (Exception ex)
+				{
+					ConsoleOutput.WriteErrorLine(ex.Message);
+				}
 			}
 		}
 
@@ -69,12 +77,12 @@ namespace Rag.MoviesClient.RagProviders.Base
 			Console.WriteLine(@" | |  | | (_) \ V /| |  __/\__ \    / ___ \\__ \__ \ \__ \ || (_| | | | | |_ ");
 			Console.WriteLine(@" |_|  |_|\___/ \_/ |_|\___||___/   /_/   \_\___/___/_|___/\__\__,_|_| |_|\__|");
 			Console.WriteLine();
-			Console.WriteLine(@$"   Edition: {RagProviderFactory.GetProviderName()}");
+			ConsoleOutput.WriteEnvironmentInfo();
 			Console.WriteLine();
 			Console.ResetColor();
 		}
 
-		private ChatCompletionsOptions InitializeCompletionOptions() =>
+		private ChatCompletionsOptions InitializeCompletionsOptions() =>
 			new()
 			{
 				MaxTokens = 1000,                   // The more tokens you specify (spend), the more verbose the response
@@ -206,8 +214,8 @@ namespace Rag.MoviesClient.RagProviders.Base
 			try
 			{
 				var embeddingsOptions = new EmbeddingsOptions(
-					deploymentName: Shared.AppConfig.OpenAI.EmbeddingsDeploymentName,   // Text embeddings model
-					input: new[] { question });                                         // Natural language query
+					deploymentName: EmbeddingModelFactory.GetDeploymentName(),   // Text embeddings model
+					input: new[] { question });                                  // Natural language query
 
 				var embeddings = await Shared.OpenAIClient.GetEmbeddingsAsync(embeddingsOptions);
 				var embeddingItems = embeddings.Value.Data;
@@ -215,8 +223,8 @@ namespace Rag.MoviesClient.RagProviders.Base
 			}
 			catch (Exception ex)
 			{
-				ConsoleOutput.WriteLine("Error generating vector embeddings", ConsoleColor.Red);
-				ConsoleOutput.WriteLine(ex.Message, ConsoleColor.Red);
+				ConsoleOutput.WriteErrorLine("Error vectorizing question");
+				ConsoleOutput.WriteErrorLine(ex.Message);
 			}
 
 			this._elapsedVectorizeQuestion = DateTime.Now.Subtract(started);
@@ -240,6 +248,7 @@ namespace Rag.MoviesClient.RagProviders.Base
 			var sb = new StringBuilder();
 			sb.AppendLine($"The movies database returned recommendations after being asked '{question}'.");
 			sb.AppendLine($"Generate a natural language response of these recommendations.");
+			sb.AppendLine($"If the recommendations returned by the database do not fit the question, then apologize and explain that you have no matching information, and provide the database results as alternate suggestions.");
 			sb.AppendLine($"Limit your response to the recommendations returned by the database; do not embellish with any other information.");
 			sb.AppendLine($"Phrase your response as though you are making the recommendations, rather than the database.");
 			sb.AppendLine($"List the recommendations in order of most similar to least similar.");
@@ -310,8 +319,8 @@ namespace Rag.MoviesClient.RagProviders.Base
 			}
 			catch (Exception ex)
 			{
-				ConsoleOutput.WriteLine("Error generating poster image", ConsoleColor.Red);
-				ConsoleOutput.WriteLine(ex.Message, ConsoleColor.Red);
+				ConsoleOutput.WriteErrorLine("Error generating poster image");
+				ConsoleOutput.WriteErrorLine(ex.Message);
 			}
 
 			this._elapsedGeneratePoster = DateTime.Now.Subtract(started);
@@ -344,7 +353,7 @@ namespace Rag.MoviesClient.RagProviders.Base
 			}
 			catch (Exception ex)
 			{
-				ConsoleOutput.WriteLine($"Error opening browser: {ex.Message}", ConsoleColor.Red);
+				ConsoleOutput.WriteErrorLine($"Error opening browser: {ex.Message}");
 			}
 		}
 

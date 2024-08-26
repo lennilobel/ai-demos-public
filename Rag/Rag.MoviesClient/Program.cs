@@ -1,6 +1,8 @@
 using Newtonsoft.Json;
 using Rag.MoviesClient.Config;
+using Rag.MoviesClient.EmbeddingModels;
 using Rag.MoviesClient.RagProviders;
+using Rag.MoviesClient.RagProviders.Sql.AzureSql;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -23,20 +25,20 @@ namespace Rag.MoviesClient
 			{
 				ConsoleOutput.Write("Selection: ");
 				var input = Console.ReadLine();
-				_action = input.ToUpper().Trim();
-				var command = _action.Split(' ')[0];
+				_action = input.Trim();
+				var command = _action.Split(' ')[0].ToUpper();
 				if (_actionMethods.TryGetValue(command, out Func<Task> actionMethod))
 				{
 					await RunAction(actionMethod);
 					ShowMenu();
 				}
-				else if (_action == "Q")
+				else if (command == "Q")
 				{
 					break;
 				}
 				else
 				{
-					ConsoleOutput.WriteLine($"?{input}", ConsoleColor.Red);
+					ConsoleOutput.WriteErrorLine($"?{input}");
 				}
 			}
 		}
@@ -52,11 +54,14 @@ namespace Rag.MoviesClient
 				{ "LD", dataPopulator.LoadData },
 				{ "VD", dataVectorizer.VectorizeData },
 				{ "UD", dataPopulator.UpdateData},
-				{ "MA", moviesAssistant.RunMoviesAssistant },
-				{ "CE", ChangeEdition },
-				{ "UC", UpdateConfiguration },
 				{ "RD", dataPopulator.ResetData },
+				{ "MA", moviesAssistant.RunMoviesAssistant },
+				{ "SD", RunSimpleVectorizeDemo},
+				{ "CP", ChangeRagProvider },
+				{ "CM", ChangeEmbeddingModel },
+				{ "UC", UpdateConfiguration },
 				{ "AC", ViewAppConfig },
+				{ "LV", LoadAndVectorize },
 			};
 		}
 
@@ -72,18 +77,20 @@ namespace Rag.MoviesClient
 			Console.WriteLine(@" |  _ <  / ___ \ |_| |   | |  | | (_) \ V /| |  __/\__ \   | |___| | |  __/ | | | |_ ");
 			Console.WriteLine(@" |_| \_\/_/   \_\____|   |_|  |_|\___/ \_/ |_|\___||___/    \____|_|_|\___|_| |_|\__|");
 			Console.WriteLine();
-			Console.WriteLine(@$"   Edition: {RagProviderFactory.GetProviderName()}");
+			ConsoleOutput.WriteEnvironmentInfo();
 			Console.WriteLine($"{new string('─', Console.WindowWidth - 1)}");
 			Console.WriteLine();
 			Console.ResetColor();
 			Console.WriteLine("Make a selection");
 			Console.WriteLine();
 			Console.ForegroundColor = ConsoleColor.Gray;
-			Console.WriteLine(" • LD - Load data              • CE - Change edition");
-			Console.WriteLine(" • VD - Vectorize data         • UC - Update configuration");
-			Console.WriteLine(" • UD - Update data            • RD - Reset data");
+			Console.WriteLine(" • LD - Load data              • CP - Change RAG provider");
+			Console.WriteLine(" • VD - Vectorize data         • CM - Change embedding model");
+			Console.WriteLine(" • UD - Update data            • UC - Update configuration");
+			Console.WriteLine(" • RD - Reset data");
 			Console.WriteLine();
-			Console.WriteLine(" • MA - Movies assistant");
+			Console.WriteLine(" • SD - Simple vectorize demo");
+			Console.WriteLine(" • MA - Movies assistant demo");
 			Console.WriteLine();
 			Console.WriteLine(" • Q  - Quit");
 			Console.WriteLine();
@@ -104,7 +111,7 @@ namespace Rag.MoviesClient
 					ex = ex.InnerException;
 					message += Environment.NewLine + ex.Message;
 				}
-				ConsoleOutput.WriteLine($"Error: {message}", ConsoleColor.Red);
+				ConsoleOutput.WriteErrorLine($"Error: {message}");
 			}
 
 			Console.WriteLine();
@@ -151,7 +158,7 @@ namespace Rag.MoviesClient
 				}
 				catch (Exception ex)
 				{
-					ConsoleOutput.WriteLine(ex.Message, ConsoleColor.Red);
+					ConsoleOutput.WriteErrorLine(ex.Message);
 				}
 			}
 
@@ -163,17 +170,38 @@ namespace Rag.MoviesClient
 			} 
 		}
 
-		private static async Task ChangeEdition()
+		private static async Task ChangeRagProvider()
 		{
+			var currentRagProviderType = RagProviderFactory.RagProviderType;
 			try
 			{
 				RagProviderFactory.RagProviderType = (RagProviderType)Enum.Parse(typeof(RagProviderType), _action.Split(' ')[1], ignoreCase: true);
 				SetRagProvider();
 				ConsoleOutput.WriteLine($"Edition has been changed to: {RagProviderFactory.GetProviderName()}", ConsoleColor.Yellow);
 			}
-			catch
+			catch (Exception ex)
 			{
-				ConsoleOutput.WriteLine("?Invalid syntax for change edition command", ConsoleColor.Red);
+				ConsoleOutput.WriteErrorLine("Unable to change the RAG provider");
+				ConsoleOutput.WriteErrorLine(ex.Message);
+				ConsoleOutput.WriteErrorLine($"Valid RAG provider values are: {string.Join(", ", Enum.GetNames(typeof(RagProviderType)))}");
+				RagProviderFactory.RagProviderType = currentRagProviderType;
+			}
+		}
+
+		private static async Task ChangeEmbeddingModel()
+		{
+			var currentEmbeddingModelType = EmbeddingModelFactory.EmbeddingModelType;
+			try
+			{
+				EmbeddingModelFactory.EmbeddingModelType = (EmbeddingModelType)Enum.Parse(typeof(EmbeddingModelType), _action.Split(' ')[1], ignoreCase: true);
+				ConsoleOutput.WriteLine($"Embedding model has been changed to: {EmbeddingModelFactory.GetDeploymentName()}", ConsoleColor.Yellow);
+			}
+			catch (Exception ex)
+			{
+				ConsoleOutput.WriteErrorLine("Unable to change the embedding model");
+				ConsoleOutput.WriteErrorLine(ex.Message);
+				ConsoleOutput.WriteErrorLine($"Valid embedding model values are: {string.Join(", ", Enum.GetNames(typeof(EmbeddingModelType)))}");
+				EmbeddingModelFactory.EmbeddingModelType = currentEmbeddingModelType;
 			}
 		}
 
@@ -181,6 +209,57 @@ namespace Rag.MoviesClient
 		{
 			ConsoleOutput.WriteHeading("App Config (appsettings.json)", ConsoleColor.Yellow);
 			ConsoleOutput.WriteLine(JsonConvert.SerializeObject(Shared.AppConfig, Formatting.Indented), ConsoleColor.Gray);
+		}
+
+		private static async Task RunSimpleVectorizeDemo() =>
+			await new SimpleVectorizeDemo().RunDemo();
+
+		private static async Task LoadAndVectorize()
+		{
+			var started = DateTime.Now;
+
+			await LoadAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbedding3Large);
+			await LoadAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbedding3Small);
+			await LoadAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbeddingAda002);
+
+			await LoadAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbedding3Large);
+			await LoadAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbedding3Small);
+			await LoadAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbeddingAda002);
+
+			//await LoadAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbedding3Large);	// EAP doesn't support large
+			await LoadAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbedding3Small);
+			await LoadAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbeddingAda002);
+
+			await LoadAndVectorize(RagProviderType.CosmosDb, EmbeddingModelType.TextEmbedding3Large);
+			await LoadAndVectorize(RagProviderType.CosmosDb, EmbeddingModelType.TextEmbedding3Small);
+			await LoadAndVectorize(RagProviderType.CosmosDb, EmbeddingModelType.TextEmbeddingAda002);
+
+			//await LoadAndVectorize(RagProviderType.MongoDb, EmbeddingModelType.TextEmbedding3Large);	// Free tier doesn't support large
+			await LoadAndVectorize(RagProviderType.MongoDb, EmbeddingModelType.TextEmbedding3Small);
+			await LoadAndVectorize(RagProviderType.MongoDb, EmbeddingModelType.TextEmbeddingAda002);
+
+			Console.WriteLine($"Completed in {DateTime.Now.Subtract(started)}");
+		}
+
+		private static async Task LoadAndVectorize(RagProviderType ragProviderType, EmbeddingModelType embeddingModelType)
+		{
+			ConsoleOutput.WriteHeading($"Load & Vectorize - {ragProviderType} {embeddingModelType}", ConsoleColor.Green);
+
+			RagProviderFactory.RagProviderType = ragProviderType;
+			EmbeddingModelFactory.EmbeddingModelType = embeddingModelType;
+
+			var dataPopulator = RagProviderFactory.GetDataPopulator();
+			var dataVectorizer = RagProviderFactory.GetDataVectorizer();
+
+			try
+			{
+				await dataPopulator.LoadData();
+				await dataVectorizer.VectorizeData();
+			}
+			catch (Exception ex)
+			{
+				ConsoleOutput.WriteErrorLine(ex.Message);
+			}
 		}
 
 	}

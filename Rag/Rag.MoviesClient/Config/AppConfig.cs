@@ -1,3 +1,4 @@
+using Rag.MoviesClient.EmbeddingModels;
 using Rag.MoviesClient.RagProviders;
 
 namespace Rag.MoviesClient.Config
@@ -6,9 +7,11 @@ namespace Rag.MoviesClient.Config
 	public class AppConfig
     {
         public RagProviderType RagProvider { get; set; }
+		public EmbeddingModelType EmbeddingModel { get; set; }
 
-        public SqlConfig SqlServer { get; set; }
+		public SqlConfig SqlServer { get; set; }
         public SqlConfig AzureSql { get; set; }
+		public SqlConfig AzureSqlEap { get; set; }
 		public class SqlConfig
 		{
 			public string ServerName { get; set; }
@@ -26,13 +29,28 @@ namespace Rag.MoviesClient.Config
 			public string DatabaseName { get; set; }
 			public string ContainerName { get; set; }
 		}
-		
+
+		public MongoDbConfig MongoDb { get; set; }
+		public class MongoDbConfig
+		{
+			public string ConnectionString { get; set; }
+			public string DatabaseName { get; set; }
+			public string CollectionName{ get; set; }
+		}
+
 		public OpenAIConfig OpenAI { get; set; }
 		public class OpenAIConfig
 		{
 			public string Endpoint { get; set; }
 			public string ApiKey { get; set; }
-			public string EmbeddingsDeploymentName { get; set; }
+			public EmbeddingDeploymentNamesConfig EmbeddingDeploymentNames { get; set; }
+			public class EmbeddingDeploymentNamesConfig
+			{
+				public string Default { get; set; }
+				public string TextEmbedding3Large { get; set; }
+				public string TextEmbedding3Small { get; set; }
+				public string TextEmbeddingAda002 { get; set; }
+			}
 			public string CompletionsDeploymentName { get; set; }
 			public string DalleDeploymentName { get; set; }
 		}

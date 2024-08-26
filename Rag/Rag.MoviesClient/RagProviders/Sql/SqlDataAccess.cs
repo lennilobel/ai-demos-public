@@ -60,10 +60,8 @@ namespace Rag.MoviesClient.RagProviders.Sql
 			}
 			catch (Exception ex)
 			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine($"Error executing stored procedure '{storedProcedureName}'", ConsoleColor.Red);
-				Console.WriteLine(ex.Message);
-				Console.ResetColor();
+				ConsoleOutput.WriteErrorLine($"Error executing stored procedure '{storedProcedureName}'");
+				ConsoleOutput.WriteErrorLine(ex.Message);
 			}
 		}
 

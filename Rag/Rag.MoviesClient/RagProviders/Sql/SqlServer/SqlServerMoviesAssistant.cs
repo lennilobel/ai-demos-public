@@ -42,7 +42,10 @@ namespace Rag.MoviesClient.RagProviders.Sql.SqlServer
 			var counter = 0;
 			await SqlDataAccess.RunStoredProcedure(
                 storedProcedureName: "RunVectorSearch",
-                storedProcedureParameters: [("@Vectors", vectorsTable)],
+                storedProcedureParameters: 
+				[
+					("@Vectors", vectorsTable)
+				],
                 getResult: rdr =>
 				{
 					counter++;
@@ -61,7 +64,8 @@ namespace Rag.MoviesClient.RagProviders.Sql.SqlServer
 						ConsoleOutput.WriteLine(JsonConvert.SerializeObject(result));
 					}
 				},
-				silent: true);
+				silent: true
+			);
 
             base._elapsedRunVectorSearch = DateTime.Now.Subtract(started);
 

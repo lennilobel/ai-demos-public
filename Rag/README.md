@@ -2,7 +2,7 @@
 
 This is a provider-based RAG solution that leverages Azure OpenAI and supports the following back-end database platforms:
 - SQL Server 2022
-- Azure SQL Database
+- Azure SQL Database (EAP)
 - Azure Cosmos DB for NoSQL
 - Azure Cosmos DB for MongoDB vCore
 
@@ -33,8 +33,8 @@ Common functionality is implemented in a set of shared base classes, while indiv
 
 - Azure SQL Database loads the initial data by shredding a JSON file from Azure Blob Storage into relational tables.
 - Azure SQL Database calls OpenAI (via sp_invoke_external_rest_endpoint) to vectorize movies in the database and natural language questions posed by users.
-- Movie vectors are efficiently stored and indexed in a native vector data type column in the Movie table (TBD).
-- Vector searching is performed using the native T-SQL vector distance function (TBD).
+- Movie vectors are efficiently stored and indexed in a varbinary(max) column in the Movie table (EAP).
+- Vector searching is performed using the VECTOR_DISTANCE function (EAP).
 - The client application is responsible for coordinating vectorization with new movies as they are added/updated.
 
 **Azure Cosmos DB for NoSQL**
@@ -109,7 +109,7 @@ To use the RAG solution with SQL Server 2022, you'll need to first initialize th
     }
     ```
 
-### Azure SQL Database
+### Azure SQL Database (Early Adopter Preview)
 
 To use the RAG solution with Azure SQL Database, you'll need to first save the JSON source files to Azure Blob Storage, initialize the sample database, and update the application configuration file accordingly.
 
@@ -164,7 +164,7 @@ To use the RAG solution with Azure SQL Database, you'll need to first save the J
 
 ### Azure Cosmos DB for NoSQL
 
-To use the RAG solution with Azure Cosmos DB for NoSQL, you'll need to first update the application configuration file for your existing Cosmos DB account.
+To use the RAG solution with Azure Cosmos DB for NoSQL, you'll need to first update the application and Azure Function configuration files for your existing Cosmos DB account.
 
 **Update the application configuration file**
 - Expand the **Rag.MoviesClient** project.
@@ -197,7 +197,7 @@ To use the RAG solution with Azure Cosmos DB for NoSQL, you'll need to first upd
   }
   ```
 
-## Running the Demo Solution
+## Run the Solution
 
 ### Start the Movies Client
 
@@ -210,25 +210,26 @@ To use the RAG solution with Azure Cosmos DB for NoSQL, you'll need to first upd
     - `AzureSql` (Azure SQL Database)
     - `CosmosDb` (Azure Cosmos DB for NoSQL)
     - `MongoDb` (Azure Cosmos DB for MongoDB vCore)
-  - The provider is set to `SqlServer` by default, but you can select any provider as the default to any provider by changing the `RagProvider` property in `appsettings.json`.
+  - Note that the provider is set to `SqlServer` by default, but you can select any provider as the default by changing the `RagProvider` property in `appsettings.json`.
   
 ### Load the Initial Data
 
 - Type the "load data" command `LD`.
-  - This will delete all existing data in the database, and populate the database with all the movies in `movies.json`.
+  - This populates the database with all the movies in `movies.json`.
+  - Any existing vector data from running previous demos will be deleted.
 
+- Type the "reset data" command `RD`.
+  - This removes the three original Star Wars trilogy movies from the database.
+  - You will re-add them and vectorize them in a later step.
+  
 - Test out searching before vectorization.
   - Type the "movies assistant" command `MA`.
   - Try asking any question, and observe that the response explains that there are no results.
 
 ### Vectorize the Initial Data
 
-- Type the "reset data" command `RD`.
-  - This removes the three original Star Wars trilogy movies from the database.
-  - You will re-add them and vectorize them in a later step.
-  
 - Type the "vectorize data" command `VD`.
-  - This will vectorize all the movies (except for the three deleted Star Wars movies).
+  - This will vectorize all the movies (but not the three deleted Star Wars movies).
   - The process typically takes approximately 15-25 minutes.
 
 ### Get Movie Recommendations
@@ -264,8 +265,8 @@ To use the RAG solution with Azure Cosmos DB for NoSQL, you'll need to first upd
 - Change the **ShowInternalOperations** property to **true**.
   - This causes the movies assistant to display the prompts and other behind-the-scenes information, as it processes each question.
 - Experiment with different values for these other properties to change the behavior of the movies assistant:
-  - **Demeanor** - sets the language tone of the AI responses
-  - **IncludeDetails** - specifies details (for example, "genre, language, run-time") to be included with each recommendation (in addition to title, year, and overview).
-  - **NoEmojis** - if true, prompts the assistant not to include emoji characters in the response (which do not render properly in console applications).
-  - **NoMarkdown** - if true, prompts the assistant not to format the response with markdown characters (which do not get processed for rendering in console applications).
-  - **GeneratePosterImage** - if true, generates a poster image based on the movie recommendations provided for each question.
+  - **Demeanor** - Sets the language tone of the AI responses
+  - **IncludeDetails** - Specifies details (for example, "genre, language, run-time") to be included with each recommendation (in addition to title, year, and overview).
+  - **NoEmojis** - If true, prompts the assistant not to include emoji characters in the response (which do not render properly in console applications).
+  - **NoMarkdown** - If true, prompts the assistant not to format the response with markdown characters (which do not get processed for rendering in console applications).
+  - **GeneratePosterImage** - If true, generates a poster image based on the movie recommendations provided for each question.

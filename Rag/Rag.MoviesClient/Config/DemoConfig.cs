@@ -19,6 +19,6 @@ namespace Rag.MoviesClient.Config
 		public bool NoEmojis { get; set; } = false;						// Don't include emojies in the response
 		public bool NoMarkdown { get; set; } = false;					// Don't format markdown in the response
 		public bool GeneratePosterImage { get; set; } = false;			// Generate a movie poster based on the response (DALL-E)
-		public bool ShowInternalOperations { get; set; } = false;        // Display internal operations (completion messages, vector search)
+		public bool ShowInternalOperations { get; set; } = false;       // Display internal operations (completion messages, vector search)
 	}
 }

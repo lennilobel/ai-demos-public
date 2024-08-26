@@ -29,6 +29,22 @@ namespace Rag.MoviesClient.RagProviders.Sql
 			ConsoleOutput.WriteLine($"Data loaded in {elapsed}", ConsoleColor.Yellow);
 		}
 
+		private async Task LoadDataFromJsonFile(string filename)
+		{
+			ConsoleOutput.WriteLine();
+			ConsoleOutput.WriteLine($"Loading data from {filename}", ConsoleColor.Yellow);
+
+			filename = RagProviderFactory.GetDataFilePath(filename);
+
+			await SqlDataAccess.RunStoredProcedure(
+				storedProcedureName: "LoadMovies",
+				storedProcedureParameters:
+				[
+					("@Filename", filename)
+				]
+			);
+		}
+
 		public async Task UpdateData()
 		{
 			Debugger.Break();
@@ -50,18 +66,6 @@ namespace Rag.MoviesClient.RagProviders.Sql
 			var elapsed = DateTime.Now.Subtract(started);
 			ConsoleOutput.WriteLine();
 			ConsoleOutput.WriteLine($"Data updated in {elapsed}", ConsoleColor.Cyan);
-		}
-
-		private async Task LoadDataFromJsonFile(string filename)
-		{
-			ConsoleOutput.WriteLine();
-			ConsoleOutput.WriteLine($"Loading data from {filename}", ConsoleColor.Yellow);
-
-			filename = RagProviderFactory.GetDataFilePath(filename);
-
-			await SqlDataAccess.RunStoredProcedure(
-				storedProcedureName: "LoadMovies",
-				storedProcedureParameters: [("@Filename", filename)]);
 		}
 
 		public async Task ResetData()

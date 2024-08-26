@@ -6,6 +6,6 @@
         "CosmosDbConnectionString": "[CONNECTION-STRING]",
         "OpenAIEndpoint": "[ENDPOINT]",
         "OpenAIKey": "[API-KEY]",
-        "OpenAIDeploymentName": "lenni-embeddings-3-large"
+        "OpenAIDeploymentName": "lenni-text-embedding-3-large"
     }
 }

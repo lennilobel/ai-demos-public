@@ -15,7 +15,7 @@ namespace Rag.MoviesFunction.CosmosDb
 {
 	public class VectorizeDocumentsFunction
 	{
-		private const string DatabaseName = "rag-demo";
+		private const string DatabaseName = "rag-demo-3l";
 		private const string ContainerName = "movies";
 
 		private static readonly List<string> _processedIds = [];

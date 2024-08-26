@@ -28,7 +28,7 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
 
             base.ConsoleWriteWaitingFor("Running vector search");
 
-            var database = Shared.CosmosClient.GetDatabase(Shared.AppConfig.CosmosDb.DatabaseName);
+            var database = Shared.CosmosClient.GetDatabase(RagProviderFactory.GetDatabaseName());
             var container = database.GetContainer(Shared.AppConfig.CosmosDb.ContainerName);
 
             // Use the VectorDistance function to calculate a similarity score, and use TOP n with ORDER BY to retrieve the most relevant documents
@@ -113,8 +113,8 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
             }
             catch (Exception ex)
             {
-                ConsoleOutput.WriteLine("Error running vector search query", ConsoleColor.Red);
-				ConsoleOutput.WriteLine(ex.Message, ConsoleColor.Red);
+                ConsoleOutput.WriteErrorLine("Error running vector search query");
+				ConsoleOutput.WriteErrorLine(ex.Message);
 
                 return null;
             }

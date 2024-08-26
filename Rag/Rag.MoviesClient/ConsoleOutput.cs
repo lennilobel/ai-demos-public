@@ -1,3 +1,5 @@
+using Rag.MoviesClient.EmbeddingModels;
+using Rag.MoviesClient.RagProviders;
 using System;
 
 namespace Rag.MoviesClient
@@ -21,6 +23,9 @@ namespace Rag.MoviesClient
 			Console.ResetColor();
 		}
 
+		public static void WriteErrorLine(string text) =>
+			WriteLine(text, ConsoleColor.Red);
+
 		public static void WriteHeading(string text, ConsoleColor color)
 		{
 			var width = Console.WindowWidth;
@@ -31,6 +36,13 @@ namespace Rag.MoviesClient
 			Console.WriteLine($"════╝{new string(' ', text.Length + 2)}╚{new string('═', width - text.Length - 9)}");
 			Console.ResetColor();
 			Console.WriteLine();
+		}
+
+		public static void WriteEnvironmentInfo()
+		{
+			Console.WriteLine(@$"   Edition:  {RagProviderFactory.GetProviderName()}");
+			Console.WriteLine(@$"   Database: {RagProviderFactory.GetDatabaseName()}");
+			Console.WriteLine(@$"   Model:    {EmbeddingModelFactory.GetDeploymentName()}");
 		}
 
 	}

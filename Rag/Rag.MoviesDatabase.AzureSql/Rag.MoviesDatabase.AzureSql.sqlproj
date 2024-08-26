@@ -123,6 +123,8 @@
     <Folder Include="Functions" />
     <Folder Include="Stored Procedures" />
     <Folder Include="Tables" />
+    <Folder Include="Types" />
+    <Folder Include="SimpleVectorizeDemo" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="BlobStorage\BlobStorageDataSource.sql" />
@@ -145,6 +147,13 @@
     <Build Include="Tables\ProductionCountry.sql" />
     <Build Include="Tables\SpokenLanguage.sql" />
     <Build Include="BlobStorage\BlobStorageCredential.sql" />
+    <Build Include="Types\MovieVectorsUdt.sql" />
+    <Build Include="Types\VectorsUdt.sql" />
+    <Build Include="Stored Procedures\RunVectorSearch.sql" />
+    <None Include="SimpleVectorizeDemo\1. Setup.sql" />
+    <None Include="SimpleVectorizeDemo\2. VectorizeData.sql" />
+    <None Include="SimpleVectorizeDemo\3. Run Vector Query.sql" />
+    <None Include="SimpleVectorizeDemo\4. Cleanup.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ProjectToAzureSqlDb.scmp" />

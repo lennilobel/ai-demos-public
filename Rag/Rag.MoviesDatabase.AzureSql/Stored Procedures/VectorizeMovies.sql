@@ -1,5 +1,8 @@
 CREATE PROCEDURE VectorizeMovies
-	@MovieIdsCsv varchar(max) = NULL
+	@MovieIdsCsv varchar(max) = NULL,
+	@OpenAIEndpoint varchar(max),
+	@OpenAIApiKey varchar(max),
+	@OpenAIDeploymentName varchar(max)
 AS
 BEGIN
 
@@ -15,11 +18,11 @@ BEGIN
 	IF LEFT(@MoviesJson, 1) = '{'
 		SET @MoviesJson = CONCAT('[', @MoviesJson, ']')
 
-	DECLARE curMovies CURSOR FOR
-		SELECT value FROM OPENJSON(@MoviesJson)
-
 	DECLARE @MovieJson varchar(max)
 	DECLARE @ErrorCount int = 0
+
+	DECLARE curMovies CURSOR FOR
+		SELECT value FROM OPENJSON(@MoviesJson)
 
 	OPEN curMovies
 	FETCH NEXT FROM curMovies INTO @MovieJson
@@ -43,7 +46,11 @@ BEGIN
 			DELETE FROM @MovieVectors
 
 			INSERT INTO @MovieVectors
-				EXEC VectorizeText @MovieJson
+			EXEC VectorizeText
+				@MovieJson,
+				@OpenAIEndpoint,
+				@OpenAIApiKey,
+				@OpenAIDeploymentName
 
 			INSERT INTO MovieVector
 			SELECT

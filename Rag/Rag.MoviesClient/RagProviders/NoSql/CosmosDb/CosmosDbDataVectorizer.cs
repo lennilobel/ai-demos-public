@@ -1,6 +1,7 @@
 using Azure.AI.OpenAI;
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json.Linq;
+using Rag.MoviesClient.EmbeddingModels;
 using Rag.MoviesClient.RagProviders.Base;
 using System;
 using System.Collections.Generic;
@@ -12,22 +13,18 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
 {
 	public class CosmosDbDataVectorizer : DataVectorizerBase
 	{
-        private static class Context
-        {
-            public static int ItemCount;
-            public static int ErrorCount;
-            public static double RuCost;
-        }
+		public static int _errorCount;
+		public static double _ruCost;
 
 		protected override async Task VectorizeMovies(int[] movieIds)
 		{
 			Debugger.Break();
 
-            Context.ItemCount = 0;
-            Context.ErrorCount = 0;
-            Context.RuCost = 0;
-
-            var database = Shared.CosmosClient.GetDatabase(Shared.AppConfig.CosmosDb.DatabaseName);
+			_errorCount = 0;
+			_ruCost = 0;
+			
+            var itemCount = 0;
+            var database = Shared.CosmosClient.GetDatabase(RagProviderFactory.GetDatabaseName());
             var container = database.GetContainer(Shared.AppConfig.CosmosDb.ContainerName);
 
             // Raise the throughput on the container
@@ -43,27 +40,27 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
             {
                 var batchStarted = DateTime.Now;
 
-                // Step 1 - Retrieve the next batch of documents
+                // Retrieve the next batch of documents
                 ConsoleOutput.Write("Retrieving documents... ", ConsoleColor.Green);
                 var documents = (await iterator.ReadNextAsync()).ToArray();
                 ConsoleOutput.WriteLine(documents.Length.ToString(), ConsoleColor.Green);
-                Context.ItemCount += documents.Length;
+                itemCount += documents.Length;
 
-                // Step 2 - Generate text embeddings (vectors) for the batch of documents
+                // Generate text embeddings (vectors) for the batch of documents
                 var embeddings = await this.GenerateEmbeddings(documents);
 
-                // Step 3 = Update the documents back to the container with generated text embeddings (vectors)
+                // Update the documents back to the container with generated text embeddings (vectors)
                 await this.SaveVectors(container, documents, embeddings);
 
                 var batchElapsed = DateTime.Now.Subtract(batchStarted);
 
-                ConsoleOutput.WriteLine($"Processed documents {Context.ItemCount - documents.Length + 1} - {Context.ItemCount} in {batchElapsed}", ConsoleColor.Cyan);
+                ConsoleOutput.WriteLine($"Processed documents {itemCount - documents.Length + 1} - {itemCount} in {batchElapsed}", ConsoleColor.Cyan);
             }
 
             // Lower the throughput on the container
             await container.ReplaceThroughputAsync(ThroughputProperties.CreateAutoscaleThroughput(autoscaleMaxThroughput: 1000));
 
-            ConsoleOutput.WriteLine($"Generated and embedded vectors for {Context.ItemCount} document(s) with {Context.ErrorCount} error(s) ({Context.RuCost} RUs)", ConsoleColor.Yellow);
+            ConsoleOutput.WriteLine($"Generated and embedded vectors for {itemCount} document(s) with {_errorCount} error(s) ({_ruCost} RUs)", ConsoleColor.Yellow);
         }
 
         private async Task<IReadOnlyList<EmbeddingItem>> GenerateEmbeddings(JObject[] documents)
@@ -84,8 +81,9 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
 
             // Generate embeddings based on the JSON string content of each document
             var embeddingsOptions = new EmbeddingsOptions(
-                deploymentName: Shared.AppConfig.OpenAI.EmbeddingsDeploymentName,
-                input: documents.Select(d => d.ToString()));
+                deploymentName: EmbeddingModelFactory.GetDeploymentName(),
+                input: documents.Select(d => d.ToString())
+            );
 
             var openAIEmbeddings = await Shared.OpenAIClient.GetEmbeddingsAsync(embeddingsOptions);
             var embeddings = openAIEmbeddings.Value.Data;
@@ -117,12 +115,12 @@ namespace Rag.MoviesClient.RagProviders.NoSql.CosmosDb
                     {
                         if (t.Status == TaskStatus.RanToCompletion)
                         {
-                            Context.RuCost += t.Result.RequestCharge;
+                            _ruCost += t.Result.RequestCharge;
                         }
                         else
                         {
-                            ConsoleOutput.WriteLine($"Error replacing document id='{document["id"]}', title='{document["title"]}'\n{t.Exception.Message}", ConsoleColor.Red);
-                            Context.ErrorCount++;
+                            ConsoleOutput.WriteErrorLine($"Error replacing document id='{document["id"]}', title='{document["title"]}'\n{t.Exception.Message}");
+                            _errorCount++;
                         }
                     }));
             }
