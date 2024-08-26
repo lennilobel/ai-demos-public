@@ -27,9 +27,9 @@ CREATE PROCEDURE VectorizeText
 AS
 BEGIN
 
-	DECLARE @OpenAIEndpoint varchar(max) = 'https://lenni-openai.openai.azure.com/'
-	DECLARE @OpenAIApiKey varchar(max) = '1e981882b329481ebe4b2bfa261f8dce'
-	DECLARE @OpenAIDeploymentName varchar(max) = 'lenni-text-embedding-3-large'
+	DECLARE @OpenAIEndpoint varchar(max) = '[OPENAI-ENDPOINT]'
+	DECLARE @OpenAIApiKey varchar(max) = '[OPENAI-API-KEY]'
+	DECLARE @OpenAIDeploymentName varchar(max) = '[OPENAI-DEPLOYMENT-NAME]'
 
 	DECLARE @Url varchar(max) = CONCAT('https://', @OpenAIEndpoint, 'openai/deployments/', @OpenAIDeploymentName, '/embeddings?api-version=2023-03-15-preview')
 	DECLARE @Headers varchar(max) = JSON_OBJECT('api-key': @OpenAIApiKey)
