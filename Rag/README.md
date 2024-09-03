@@ -80,7 +80,7 @@ Regardless of which database platform you're using, you'll need to configure an 
 **Update the application configuration file**
 - Open the **AIDemos** solution in Visual Studio.
 - Expand the **Rag** folder.
-- Expand the **Rag.MoviesClient** project.
+- Expand the **Rag.AIClient** project.
 - Open the **appsettings.json** file.
 - In the **OpenAI** section, supply the endpoint and API key of your Azure resource, as well as the names you assigned to the three model deployments:
   ```json
@@ -109,7 +109,7 @@ To use the RAG solution with SQL Server 2022, you'll need to first initialize th
 - Click **Update**.
 
 **Update the application configuration file**
-- Expand the **Rag.MoviesClient** project.
+- Expand the **Rag.AIClient** project.
 - Open the **appsettings.json** file.
 - In the **SqlServer** section, supply the server name, username, and password for connecting to the database:
   ```json
@@ -127,7 +127,7 @@ To use the RAG solution with SQL Server 2022, you'll need to first initialize th
 To use the RAG solution with Azure SQL Database, you'll need to first save the JSON source files to Azure Blob Storage, initialize the sample database, and update the application configuration file accordingly.
 
 **Save JSON files to Azure Blob Storage**
-- Under **Rag\Rag.MoviesClient\Data**, copy the two **.json** files to an Azure Blob Storage container.
+- Under **Rag\Rag.AIClient\Data**, copy the two **.json** files to an Azure Blob Storage container.
   - `movies.json`
   - `movies-sw.json`
 - Expand the **BlobStorage** folder in the **Rag.MoviesDatabase.AzureSql** project.
@@ -163,7 +163,7 @@ To use the RAG solution with Azure SQL Database, you'll need to first save the J
 - Click **Update**.
 
 **Update the application configuration file**
-- Expand the **Rag.MoviesClient** project.
+- Expand the **Rag.AIClient** project.
 - Open the **appsettings.json** file.
 - In the **AzureSql** section, supply the server name, username and password for connecting to the database:
   ```json
@@ -184,7 +184,7 @@ To use the RAG solution with Azure SQL Database (EAP), follow the steps in the p
 To use the RAG solution with Azure Cosmos DB for NoSQL, you'll need to first update the application and Azure Function configuration files for your existing Cosmos DB account.
 
 **Update the application configuration file**
-- Expand the **Rag.MoviesClient** project.
+- Expand the **Rag.AIClient** project.
 - Open the **appsettings.json** file.
 - In the **CosmosDb** section, supply the endpoint and master key for connecting to your Azure Cosmos DB for NoSQL account:
   ```json
@@ -218,7 +218,7 @@ To use the RAG solution with Azure Cosmos DB for NoSQL, you'll need to first upd
 
 ### Start the Movies Client
 
-- Run the `Rag.MoviesClient` project.
+- Run the `Rag.AIClient` project.
   - All the primary functionality is contained in this one console application.
 
 - Select the RAG provider for your database platform.
