@@ -1,8 +1,8 @@
 using Newtonsoft.Json;
-using Rag.AIClient.Config;
-using Rag.AIClient.EmbeddingModels;
-using Rag.AIClient.RagProviders;
-using Rag.AIClient.RagProviders.Sql.AzureSql;
+using Rag.AIClient.Engine;
+using Rag.AIClient.Engine.Config;
+using Rag.AIClient.Engine.EmbeddingModels;
+using Rag.AIClient.Engine.RagProviders;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -45,9 +45,10 @@ namespace Rag.AIClient
 
 		private static void SetRagProvider()
 		{
-			var dataPopulator = RagProviderFactory.GetDataPopulator();
-			var dataVectorizer = RagProviderFactory.GetDataVectorizer();
-			var aiAssistant = RagProviderFactory.GetAIAssistant();
+			var ragProvider = RagProviderFactory.GetRagProvider();
+			var dataPopulator = ragProvider.GetDataPopulator();
+			var dataVectorizer = ragProvider.GetDataVectorizer();
+			var aiAssistant = ragProvider.GetAIAssistant();
 
 			_actionMethods = new Dictionary<string, Func<Task>>()
 			{
@@ -56,7 +57,7 @@ namespace Rag.AIClient
 				{ "UD", dataPopulator.UpdateData},
 				{ "RD", dataPopulator.ResetData },
 				{ "AI", aiAssistant.RunAIAssistant },
-				{ "SD", RunSimpleVectorizeDemo},
+				{ "HW", RunHelloWorldDemo},
 				{ "CP", ChangeRagProvider },
 				{ "CM", ChangeEmbeddingModel },
 				{ "UC", UpdateConfiguration },
@@ -89,7 +90,7 @@ namespace Rag.AIClient
 			Console.WriteLine(" • UD - Update data            • UC - Update configuration");
 			Console.WriteLine(" • RD - Reset data");
 			Console.WriteLine();
-			Console.WriteLine(" • SD - Simple vectorize demo");
+			Console.WriteLine(" • HW - Hello RAG World demo");
 			Console.WriteLine(" • AI - AI Assistant demo");
 			Console.WriteLine();
 			Console.WriteLine(" • Q  - Quit");
@@ -175,15 +176,26 @@ namespace Rag.AIClient
 			var currentRagProviderType = RagProviderFactory.RagProviderType;
 			try
 			{
-				RagProviderFactory.RagProviderType = (RagProviderType)Enum.Parse(typeof(RagProviderType), _action.Split(' ')[1], ignoreCase: true);
+				var parameters = _action.Split(' ');
+				
+				var ragProviderType = (RagProviderType)Enum.Parse(typeof(RagProviderType), parameters[1], ignoreCase: true);
+				var externalRagProviderType = default(string);
+
+				if (ragProviderType == RagProviderType.External)
+				{
+					externalRagProviderType = parameters[2];
+				}
+
+				RagProviderFactory.RagProviderType = ragProviderType;
+				RagProviderFactory.ExternalRagProviderType = externalRagProviderType;
 				SetRagProvider();
-				ConsoleOutput.WriteLine($"Edition has been changed to: {RagProviderFactory.GetProviderName()}", ConsoleColor.Yellow);
-			}
+
+				ConsoleOutput.WriteLine($"Edition has been changed to: {RagProviderFactory.GetRagProvider().ProviderName}", ConsoleColor.Yellow);
+			} 
 			catch (Exception ex)
 			{
 				ConsoleOutput.WriteErrorLine("Unable to change the RAG provider");
 				ConsoleOutput.WriteErrorLine(ex.Message);
-				ConsoleOutput.WriteErrorLine($"Valid RAG provider values are: {string.Join(", ", Enum.GetNames(typeof(RagProviderType)))}");
 				RagProviderFactory.RagProviderType = currentRagProviderType;
 			}
 		}
@@ -211,24 +223,24 @@ namespace Rag.AIClient
 			ConsoleOutput.WriteLine(JsonConvert.SerializeObject(Shared.AppConfig, Formatting.Indented), ConsoleColor.Gray);
 		}
 
-		private static async Task RunSimpleVectorizeDemo() =>
-			await new SimpleVectorizeDemo().RunDemo();
+		private static async Task RunHelloWorldDemo() =>
+			await new HelloRagWorld().RunDemo();
 
 		private static async Task LoadAndVectorize()
 		{
 			var started = DateTime.Now;
 
-			await LoadAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbedding3Large);
-			await LoadAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbedding3Small);
-			await LoadAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbeddingAda002);
+			//await LoadAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbedding3Large);
+			//await LoadAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbedding3Small);
+			//await LoadAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbeddingAda002);
 
-			await LoadAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbedding3Large);
-			await LoadAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbedding3Small);
-			await LoadAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbeddingAda002);
+			//await LoadAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbedding3Large);
+			//await LoadAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbedding3Small);
+			//await LoadAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbeddingAda002);
 
-			//await LoadAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbedding3Large);	// EAP doesn't support large
-			await LoadAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbedding3Small);
-			await LoadAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbeddingAda002);
+			////await LoadAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbedding3Large);	// EAP doesn't support large
+			//await LoadAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbedding3Small);
+			//await LoadAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbeddingAda002);
 
 			await LoadAndVectorize(RagProviderType.CosmosDb, EmbeddingModelType.TextEmbedding3Large);
 			await LoadAndVectorize(RagProviderType.CosmosDb, EmbeddingModelType.TextEmbedding3Small);
@@ -248,8 +260,9 @@ namespace Rag.AIClient
 			RagProviderFactory.RagProviderType = ragProviderType;
 			EmbeddingModelFactory.EmbeddingModelType = embeddingModelType;
 
-			var dataPopulator = RagProviderFactory.GetDataPopulator();
-			var dataVectorizer = RagProviderFactory.GetDataVectorizer();
+			var ragProvider = RagProviderFactory.GetRagProvider();
+			var dataPopulator = ragProvider.GetDataPopulator();
+			var dataVectorizer = ragProvider.GetDataVectorizer();
 
 			try
 			{
@@ -261,6 +274,14 @@ namespace Rag.AIClient
 				ConsoleOutput.WriteErrorLine(ex.Message);
 			}
 		}
+
+		//private static void MakeStringIds()
+		//{
+		//	var filePath = @"C:\Projects\Sleek\ai-demos-private\Rag\Rag.AIClient\Data\products.json";
+		//	var content = System.IO.File.ReadAllText(filePath);
+		//	var updatedContent = System.Text.RegularExpressions.Regex.Replace(content, @"""id"":\s*(\d+)", @"""id"": ""$1""");
+		//	System.IO.File.WriteAllText(filePath, updatedContent);
+		//}
 
 	}
 }
