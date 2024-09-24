@@ -11,7 +11,9 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 
         public override AppConfig.CosmosDbConfig CosmosDbConfig => Shared.AppConfig.CosmosDb;
 
-        public override IDataPopulator GetDataPopulator() => new CosmosDbDataPopulator(this);
+		public override string EntityTitleFieldName => "title";
+
+		public override IDataPopulator GetDataPopulator() => new CosmosDbDataPopulator(this);
 
         public override IDataVectorizer GetDataVectorizer() => new CosmosDbDataVectorizer(this);
 

@@ -10,6 +10,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 		AppConfig.CosmosDbConfig CosmosDbConfig { get; }
 		AppConfig.MongoDbConfig MongoDbConfig { get; }
 		string SqlConnectionString { get; }
+		string EntityTitleFieldName { get; }
 
 		string GetDataFilePath(string filename);
 		string GetDataFileLocalPath(string filename);

@@ -50,7 +50,7 @@ BEGIN
 			FETCH NEXT FROM curMovies INTO @MovieJson
 			WHILE @@FETCH_STATUS = 0
 			BEGIN
-				SET @Message = CONCAT('Vectorizing movie - ', JSON_VALUE(@MovieJson, '$.Title'), ' (ID ', JSON_VALUE(@MovieJson, '$.MovieId'), ')')
+				SET @Message = CONCAT('Vectorizing entity - ', JSON_VALUE(@MovieJson, '$.Title'), ' (ID ', JSON_VALUE(@MovieJson, '$.MovieId'), ')')
 				RAISERROR(@Message, 0, 1) WITH NOWAIT
 				FETCH NEXT FROM curMovies INTO @MovieJson
 			END

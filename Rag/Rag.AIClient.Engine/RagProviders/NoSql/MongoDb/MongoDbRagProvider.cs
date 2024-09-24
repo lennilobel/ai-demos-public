@@ -11,6 +11,8 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 
         public override AppConfig.MongoDbConfig MongoDbConfig => Shared.AppConfig.MongoDb;
 
+		public override string EntityTitleFieldName => "title";
+		
         public override IDataPopulator GetDataPopulator() => new MongoDbDataPopulator(this);
 
         public override IDataVectorizer GetDataVectorizer() => new MongoDbDataVectorizer(this);

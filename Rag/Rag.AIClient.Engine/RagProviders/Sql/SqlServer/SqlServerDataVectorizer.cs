@@ -47,7 +47,7 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 				var documents = moviesArray.Skip(i).Take(BatchSize).ToArray();
 				foreach (var document in documents)
 				{
-					ConsoleOutput.WriteLine($"{++itemCount,5}: Vectorizing movie - {document["Title"]} (ID {document["MovieId"]})", ConsoleColor.DarkCyan);
+					ConsoleOutput.WriteLine($"{++itemCount,5}: Vectorizing entity - {document[base.RagProvider.EntityTitleFieldName]} (ID {document["MovieId"]})", ConsoleColor.DarkCyan);
 				}
 
 				// Generate text embeddings (vectors) for the batch of documents

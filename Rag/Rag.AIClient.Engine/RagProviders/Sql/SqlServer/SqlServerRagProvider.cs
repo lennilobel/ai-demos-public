@@ -11,6 +11,8 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 
         public override AppConfig.SqlConfig SqlConfig => Shared.AppConfig.SqlServer;
 
+		public override string EntityTitleFieldName => "Title";
+		
         public override IDataPopulator GetDataPopulator() => new SqlServerDataPopulator(this);
 
         public override IDataVectorizer GetDataVectorizer() => new SqlServerDataVectorizer(this);

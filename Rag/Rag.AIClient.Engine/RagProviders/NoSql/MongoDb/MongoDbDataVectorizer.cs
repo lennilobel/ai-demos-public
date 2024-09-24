@@ -36,7 +36,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 
 				var documents = (await collection
 					.Find(Builders<BsonDocument>.Filter.Empty)
-					.Sort(Builders<BsonDocument>.Sort.Ascending("title"))
+					.Sort(Builders<BsonDocument>.Sort.Ascending(base.RagProvider.EntityTitleFieldName))
 					.Skip(itemCount)
 					.Limit(BatchSize)
 					.ToListAsync())
@@ -49,9 +49,9 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 				{
 					foreach (var document in documents)
 					{
-						var title = document.GetValue("title").AsString;
+						var title = document.GetValue(base.RagProvider.EntityTitleFieldName).AsString;
 						var id = document.GetValue("_id").ToString();
-						ConsoleOutput.WriteLine($"{++counter,5}: Vectorizing movie - {title} (ID {id})", ConsoleColor.DarkCyan);
+						ConsoleOutput.WriteLine($"{++counter,5}: Vectorizing entity - {title} (ID {id})", ConsoleColor.DarkCyan);
 					}
 
 					// Generate text embeddings (vectors) for the batch of documents

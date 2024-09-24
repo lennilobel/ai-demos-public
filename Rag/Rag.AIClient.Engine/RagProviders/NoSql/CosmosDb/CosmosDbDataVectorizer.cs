@@ -39,7 +39,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
             await container.ReplaceThroughputAsync(ThroughputProperties.CreateAutoscaleThroughput(autoscaleMaxThroughput: 10000));
 
             // Query documents in the container (process results in batches)
-            var sql = $"SELECT * FROM c{(ids == null ? null : $" WHERE c.id = IN({string.Join(',', ids)})")} ORDER BY c.title";
+            var sql = $"SELECT * FROM c{(ids == null ? null : $" WHERE c.id = IN({string.Join(',', ids)})")} ORDER BY c.{base.RagProvider.EntityTitleFieldName}";
             var iterator = container.GetItemQueryIterator<JObject>(
                 queryText: sql,
                 requestOptions: new QueryRequestOptions { MaxItemCount = 100 });
@@ -52,7 +52,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
                 var documents = (await iterator.ReadNextAsync()).ToArray();
                 foreach (var document in documents)
                 {
-					ConsoleOutput.WriteLine($"{++itemCount,5}: Vectorizing movie - {document["title"]} (ID {document["id"]})", ConsoleColor.DarkCyan);
+					ConsoleOutput.WriteLine($"{++itemCount,5}: Vectorizing entity - {document[base.RagProvider.EntityTitleFieldName]} (ID {document["id"]})", ConsoleColor.DarkCyan);
 				}
 
                 // Generate text embeddings (vectors) for the batch of documents

@@ -10,6 +10,8 @@ namespace Rag.AIClient.Engine.Custom
 
 		public override AppConfig.CosmosDbConfig CosmosDbConfig => Shared.AppConfig.GetExternalRagProvider("Recipes").CosmosDb;
 
+		public override string EntityTitleFieldName => "name";
+
 		public override IAIAssistant GetAIAssistant() => new RecipesAssistant(this);
 
 	}

@@ -11,6 +11,8 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.AzureSql
 
         public override AppConfig.SqlConfig SqlConfig => Shared.AppConfig.AzureSql;
 
+		public override string EntityTitleFieldName => "Title";
+		
         public override string GetDataFilePath(string filename) => filename;
 
         public override IDataPopulator GetDataPopulator() => new AzureSqlDataPopulator(this);
