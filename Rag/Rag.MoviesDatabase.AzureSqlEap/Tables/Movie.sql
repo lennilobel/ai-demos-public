@@ -18,3 +18,4 @@ CREATE TABLE Movie
 	VoteCount			int,
 	Vectors				varbinary(8000)
 )
+

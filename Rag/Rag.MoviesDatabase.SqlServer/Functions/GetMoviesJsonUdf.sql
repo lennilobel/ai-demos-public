@@ -74,6 +74,8 @@ BEGIN
         WHERE
             (@MovieCount = 0) OR
             (@MovieCount > 0 AND EXISTS (SELECT 1 FROM @MovieIds AS ids WHERE ids.MovieId = m.MovieId))
+        ORDER BY
+            Title
         FOR JSON PATH
     )
 

@@ -1,8 +1,0 @@
-SET NOCOUNT ON
-
--- Connect to MovieDemo database
-
-DROP PROCEDURE IF EXISTS AskQuestion
-DROP PROCEDURE IF EXISTS VectorizeText
-DROP TABLE IF EXISTS MovieVector
-DROP TABLE IF EXISTS Movie

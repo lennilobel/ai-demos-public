@@ -1,8 +1,5 @@
 CREATE PROCEDURE VectorizeMovies
-	@MovieIdsCsv varchar(max) = NULL,
-	@OpenAIEndpoint varchar(max),
-	@OpenAIApiKey varchar(max),
-	@OpenAIDeploymentName varchar(max)
+	@MovieIdsCsv varchar(max) = NULL
 AS
 BEGIN
 
@@ -42,9 +39,6 @@ BEGIN
 
 			EXEC VectorizeText
 				@MovieJson,
-				@OpenAIEndpoint,
-				@OpenAIApiKey,
-				@OpenAIDeploymentName,
 				@MovieVectors OUTPUT
 
 		END TRY

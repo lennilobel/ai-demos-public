@@ -4,7 +4,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 {
 	public interface IDataPopulator
 	{
-		Task LoadData();
+		Task InitializeData();
 		Task ResetData();
 		Task UpdateData();
 	}

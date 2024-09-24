@@ -20,7 +20,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 		{
 		}
 
-		public override async Task LoadData()
+		public override async Task InitializeData()
 		{
 			Debugger.Break();
 
@@ -70,7 +70,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 							Path = "/vectors",                          // property path to generated vector array
 							DataType = VectorDataType.Float32,          // highest precision values
 							DistanceFunction = DistanceFunction.Cosine, // calculates the similarity between two vector arrays
-							Dimensions = 1536                           // vector array size (must match the embeddings model; start with 256, increase for greater accuracy)
+							Dimensions = 3072                           // vector array size (must match the embeddings model; start with 256, increase for greater accuracy)
 						}
 					])
 				),

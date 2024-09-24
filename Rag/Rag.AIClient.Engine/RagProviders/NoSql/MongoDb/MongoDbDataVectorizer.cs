@@ -28,15 +28,15 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 			var database = Shared.MongoClient.GetDatabase(base.RagProvider.DatabaseName);
 			var collection = database.GetCollection<BsonDocument>(base.RagProvider.MongoDbConfig.CollectionName);
 
+			var counter = 0;
+
 			while (true)
 			{
 				var batchStarted = DateTime.Now;
 
-				// Retrieve the next batch of documents
-				ConsoleOutput.Write("Retrieving documents... ", ConsoleColor.Green);
-
 				var documents = (await collection
 					.Find(Builders<BsonDocument>.Filter.Empty)
+					.Sort(Builders<BsonDocument>.Sort.Ascending("title"))
 					.Skip(itemCount)
 					.Limit(BatchSize)
 					.ToListAsync())
@@ -47,6 +47,13 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 
 				if (documents.Length > 0)
 				{
+					foreach (var document in documents)
+					{
+						var title = document.GetValue("title").AsString;
+						var id = document.GetValue("_id").ToString();
+						ConsoleOutput.WriteLine($"{++counter,5}: Vectorizing movie - {title} (ID {id})", ConsoleColor.DarkCyan);
+					}
+
 					// Generate text embeddings (vectors) for the batch of documents
 					var embeddings = await this.GenerateEmbeddings(documents);
 

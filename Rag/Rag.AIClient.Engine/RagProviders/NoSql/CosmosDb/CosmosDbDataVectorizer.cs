@@ -16,8 +16,8 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 	{
 		protected virtual AppConfig.CosmosDbConfig CosmosDbConfig => base.RagProvider.CosmosDbConfig;
 
-		public static int _errorCount;
-		public static double _ruCost;
+		public int _errorCount;
+		public double _ruCost;
 
 		public CosmosDbDataVectorizer(IRagProvider ragProvider)
 			: base(ragProvider)
@@ -28,8 +28,8 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 		{
 			Debugger.Break();
 
-			_errorCount = 0;
-			_ruCost = 0;
+			this._errorCount = 0;
+			this._ruCost = 0;
 			
             var itemCount = 0;
             var database = Shared.CosmosClient.GetDatabase(base.RagProvider.DatabaseName);
@@ -39,7 +39,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
             await container.ReplaceThroughputAsync(ThroughputProperties.CreateAutoscaleThroughput(autoscaleMaxThroughput: 10000));
 
             // Query documents in the container (process results in batches)
-            var sql = $"SELECT * FROM c{(ids == null ? null : $" WHERE c.id = IN({string.Join(',', ids)})")}";
+            var sql = $"SELECT * FROM c{(ids == null ? null : $" WHERE c.id = IN({string.Join(',', ids)})")} ORDER BY c.title";
             var iterator = container.GetItemQueryIterator<JObject>(
                 queryText: sql,
                 requestOptions: new QueryRequestOptions { MaxItemCount = 100 });
@@ -49,10 +49,11 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
                 var batchStarted = DateTime.Now;
 
                 // Retrieve the next batch of documents
-                ConsoleOutput.Write("Retrieving documents... ", ConsoleColor.Green);
                 var documents = (await iterator.ReadNextAsync()).ToArray();
-                ConsoleOutput.WriteLine(documents.Length.ToString(), ConsoleColor.Green);
-                itemCount += documents.Length;
+                foreach (var document in documents)
+                {
+					ConsoleOutput.WriteLine($"{++itemCount,5}: Vectorizing movie - {document["title"]} (ID {document["id"]})", ConsoleColor.DarkCyan);
+				}
 
                 // Generate text embeddings (vectors) for the batch of documents
                 var embeddings = await this.GenerateEmbeddings(documents);
@@ -68,7 +69,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
             // Lower the throughput on the container
             await container.ReplaceThroughputAsync(ThroughputProperties.CreateAutoscaleThroughput(autoscaleMaxThroughput: 1000));
 
-            ConsoleOutput.WriteLine($"Generated and embedded vectors for {itemCount} document(s) with {_errorCount} error(s) ({_ruCost} RUs)", ConsoleColor.Yellow);
+            ConsoleOutput.WriteLine($"Generated and embedded vectors for {itemCount} document(s) with {this._errorCount} error(s) ({this._ruCost} RUs)", ConsoleColor.Yellow);
         }
 
         private async Task<IReadOnlyList<EmbeddingItem>> GenerateEmbeddings(JObject[] documents)

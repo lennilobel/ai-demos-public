@@ -1,4 +1,8 @@
 using Rag.AIClient.Engine.RagProviders.Base;
+using Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb;
+using Rag.AIClient.Engine.RagProviders.NoSql.MongoDb;
+using Rag.AIClient.Engine.RagProviders.Sql.AzureSql;
+using Rag.AIClient.Engine.RagProviders.Sql.SqlServer;
 using System;
 using System.Linq;
 using System.Reflection;

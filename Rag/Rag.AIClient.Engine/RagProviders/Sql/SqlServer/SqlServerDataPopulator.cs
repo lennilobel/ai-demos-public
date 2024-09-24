@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 namespace Rag.AIClient.Engine.RagProviders.Sql
 {
-	public class SqlDataPopulator : DataPopulatorBase
+	public class SqlServerDataPopulator : DataPopulatorBase
 	{
-		public SqlDataPopulator(IRagProvider ragProvider)
+		public SqlServerDataPopulator(IRagProvider ragProvider)
 			: base(ragProvider)
 		{
 		}
 
-		public override async Task LoadData()
+		public override async Task InitializeData()
 		{
 			Debugger.Break();
 
@@ -58,11 +58,12 @@ namespace Rag.AIClient.Engine.RagProviders.Sql
 			ConsoleOutput.WriteHeading("Update Data", ConsoleColor.Yellow);
 
 			// Load additional data into the database
-			var filename = base.RagProvider.GetDataFilePath(base.RagProvider.SqlConfig.JsonUpdateDataFilename);
-			await this.LoadDataFromJsonFile(filename);
+			var remoteFilename = base.RagProvider.GetDataFilePath(base.RagProvider.SqlConfig.JsonUpdateDataFilename);
+			await this.LoadDataFromJsonFile(remoteFilename);
 
 			// Vectorize the new data
-			var documents = JsonConvert.DeserializeObject<JArray>(File.ReadAllText(filename));
+			var localFilename = base.RagProvider.GetDataFileLocalPath(base.RagProvider.SqlConfig.JsonUpdateDataFilename);
+			var documents = JsonConvert.DeserializeObject<JArray>(File.ReadAllText(localFilename));
 			var movieIds = documents.Select(d => ((JObject)d)["id"].Value<int>()).ToArray();
 
 			var vectorizer = base.RagProvider.GetDataVectorizer();

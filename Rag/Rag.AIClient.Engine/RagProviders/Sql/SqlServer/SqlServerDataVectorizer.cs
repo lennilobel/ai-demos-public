@@ -37,12 +37,18 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 			ConsoleOutput.WriteLine($"Vectorizing {moviesArray.Length} movie(s)", ConsoleColor.Yellow);
 
 			const int BatchSize = 100;
+			var itemCount = 0;
+
 			for (var i = 0; i < moviesArray.Length; i += BatchSize)
 			{
 				var batchStarted = DateTime.Now;
 
-				// Get next batch of movie documents
+				// Retrieve the next batch of documents
 				var documents = moviesArray.Skip(i).Take(BatchSize).ToArray();
+				foreach (var document in documents)
+				{
+					ConsoleOutput.WriteLine($"{++itemCount,5}: Vectorizing movie - {document["Title"]} (ID {document["MovieId"]})", ConsoleColor.DarkCyan);
+				}
 
 				// Generate text embeddings (vectors) for the batch of documents
 				var embeddings = await this.GenerateEmbeddings(documents);
@@ -54,6 +60,8 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 
 				ConsoleOutput.WriteLine($"Processed rows {i + 1} - {i + documents.Length} in {batchElapsed}", ConsoleColor.Cyan);
 			}
+
+			ConsoleOutput.WriteLine($"Generated and embedded vectors for {itemCount} document(s)", ConsoleColor.Yellow);
 		}
 
 		private async Task<IReadOnlyList<EmbeddingItem>> GenerateEmbeddings(JObject[] documents)

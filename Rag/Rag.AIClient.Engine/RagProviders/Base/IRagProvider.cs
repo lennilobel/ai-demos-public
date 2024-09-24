@@ -12,6 +12,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 		string SqlConnectionString { get; }
 
 		string GetDataFilePath(string filename);
+		string GetDataFileLocalPath(string filename);
 
 		IDataPopulator GetDataPopulator();
 		IDataVectorizer GetDataVectorizer();

@@ -123,6 +123,7 @@
     <Folder Include="Functions" />
     <Folder Include="Stored Procedures" />
     <Folder Include="Tables" />
+    <Folder Include="EapDocs" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="BlobStorage\BlobStorageDataSource.sql" />
@@ -145,8 +146,23 @@
     <Build Include="Tables\SpokenLanguage.sql" />
     <Build Include="BlobStorage\BlobStorageCredential.sql" />
     <Build Include="Stored Procedures\RunVectorSearch.sql" />
+    <None Include="AlterDatabaseForVector1536DataType.sql" />
+    <Build Include="Tables\AppConfig.sql" />
+    <None Include="CreateRagDemoAzureSqlEapDatabase.sql" />
+    <Build Include="Stored Procedures\LoadConfig.sql" />
+    <None Include="EapDocs\migrate-to-vector-type.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ProjectToAzureSqlDbEap.scmp" />
+    <None Include="EapDocs\ISVECTOR %28Transact-SQL.pdf" />
+    <None Include="EapDocs\JSON_ARRAY_TO_VECTOR %28Transact-SQL).pdf" />
+    <None Include="EapDocs\Private Preview - Native Vector Support in SQLDB - v1.2.pdf" />
+    <None Include="EapDocs\VECTOR Data Type %28Transact-SQL).pdf" />
+    <None Include="EapDocs\Vector Functions.pdf" />
+    <None Include="EapDocs\VECTOR_DISTANCE %28Transact-SQL).pdf" />
+    <None Include="EapDocs\VECTOR_NORM %28Transact-SQL).pdf" />
+    <None Include="EapDocs\VECTOR_NORMALIZE %28Transact-SQL).pdf" />
+    <None Include="EapDocs\VECTOR_TO_JSON_ARRAY %28Transact-SQL).pdf" />
+    <None Include="EapDocs\Vectors in SQL Server.pdf" />
   </ItemGroup>
 </Project>

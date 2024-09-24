@@ -29,7 +29,6 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			"Do you know any movies produced by Pixar?",
 			"Can you recommend movies in Italian?",
 			"Actually, I meant just comedies in that language.",
-			"Can you recommend movies made before the year 2000?",
 			"I love horror flicks.",
 		];
 
@@ -39,7 +38,11 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			sb.AppendLine($"You are a movies enthusiast who helps people discover films that they would enjoy watching.");
 			sb.AppendLine($"Your demeanor is {DemoConfig.Instance.Demeanor}.");
+			sb.AppendLine($"Your recommendations are based on the similarity score included in the results returned from a vector search against a movies database.");
+			sb.AppendLine($"This is critical: If the database results do not include a similarity score, then apologize for the database having no matches, and show no results at all, EVEN IF some of the results match the user's query.");
 			sb.AppendLine($"Only include the following details of each movie recommendation: title, year, overview, {DemoConfig.Instance.IncludeDetails}.");
+			sb.AppendLine($"Don't recommend any movies other than the movies returned by the database.");
+			sb.AppendLine($"Don't include movie recommendations returned by the database that don't fit the user's question.");
 
 			return sb.ToString();
 		}
@@ -50,9 +53,9 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			sb.AppendLine($"The movies database returned recommendations after being asked '{question}'.");
 			sb.AppendLine($"Generate a natural language response of these recommendations.");
-			sb.AppendLine($"If the recommendations returned by the database do not fit the question, then apologize and explain that you have no matching information, and provide the database results as alternate suggestions.");
-			sb.AppendLine($"Limit your response to the recommendations returned by the database; do not embellish with any other information.");
 			sb.AppendLine($"Phrase your response as though you are making the recommendations, rather than the database.");
+			sb.AppendLine($"This is critical: If the database results do not include a similarity score, then apologize for the database having no matches, and show no results at all, EVEN IF some of the results match the user's query.");
+			sb.AppendLine($"Limit your response to the recommendations returned by the database; do not embellish with any other information.");
 			sb.AppendLine($"List the recommendations in order of most similar to least similar.");
 
 			return sb.ToString();

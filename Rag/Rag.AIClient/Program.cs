@@ -46,13 +46,14 @@ namespace Rag.AIClient
 		private static void SetRagProvider()
 		{
 			var ragProvider = RagProviderFactory.GetRagProvider();
+
 			var dataPopulator = ragProvider.GetDataPopulator();
 			var dataVectorizer = ragProvider.GetDataVectorizer();
 			var aiAssistant = ragProvider.GetAIAssistant();
 
 			_actionMethods = new Dictionary<string, Func<Task>>()
 			{
-				{ "LD", dataPopulator.LoadData },
+				{ "ID", dataPopulator.InitializeData },
 				{ "VD", dataVectorizer.VectorizeData },
 				{ "UD", dataPopulator.UpdateData},
 				{ "RD", dataPopulator.ResetData },
@@ -62,7 +63,7 @@ namespace Rag.AIClient
 				{ "CM", ChangeEmbeddingModel },
 				{ "UC", UpdateConfiguration },
 				{ "AC", ViewAppConfig },
-				{ "LV", LoadAndVectorize },
+				{ "IV", InitializeAndVectorize },
 			};
 		}
 
@@ -85,7 +86,7 @@ namespace Rag.AIClient
 			Console.WriteLine("Make a selection");
 			Console.WriteLine();
 			Console.ForegroundColor = ConsoleColor.Gray;
-			Console.WriteLine(" • LD - Load data              • CP - Change RAG provider");
+			Console.WriteLine(" • ID - Initialize data        • CP - Change RAG provider");
 			Console.WriteLine(" • VD - Vectorize data         • CM - Change embedding model");
 			Console.WriteLine(" • UD - Update data            • UC - Update configuration");
 			Console.WriteLine(" • RD - Reset data");
@@ -226,36 +227,36 @@ namespace Rag.AIClient
 		private static async Task RunHelloWorldDemo() =>
 			await new HelloRagWorld().RunDemo();
 
-		private static async Task LoadAndVectorize()
+		private static async Task InitializeAndVectorize()
 		{
 			var started = DateTime.Now;
 
-			//await LoadAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbedding3Large);
-			//await LoadAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbedding3Small);
-			//await LoadAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbeddingAda002);
+			await InitializeAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbedding3Large);
+			await InitializeAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbedding3Small);
+			await InitializeAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbeddingAda002);
 
-			//await LoadAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbedding3Large);
-			//await LoadAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbedding3Small);
-			//await LoadAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbeddingAda002);
+			await InitializeAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbedding3Large);
+			await InitializeAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbedding3Small);
+			await InitializeAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbeddingAda002);
 
-			////await LoadAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbedding3Large);	// EAP doesn't support large
-			//await LoadAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbedding3Small);
-			//await LoadAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbeddingAda002);
+			//await InitializeAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbedding3Large);	// EAP doesn't support large
+			await InitializeAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbedding3Small);
+			await InitializeAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbeddingAda002);
 
-			await LoadAndVectorize(RagProviderType.CosmosDb, EmbeddingModelType.TextEmbedding3Large);
-			await LoadAndVectorize(RagProviderType.CosmosDb, EmbeddingModelType.TextEmbedding3Small);
-			await LoadAndVectorize(RagProviderType.CosmosDb, EmbeddingModelType.TextEmbeddingAda002);
+			await InitializeAndVectorize(RagProviderType.CosmosDb, EmbeddingModelType.TextEmbedding3Large);
+			await InitializeAndVectorize(RagProviderType.CosmosDb, EmbeddingModelType.TextEmbedding3Small);
+			await InitializeAndVectorize(RagProviderType.CosmosDb, EmbeddingModelType.TextEmbeddingAda002);
 
-			//await LoadAndVectorize(RagProviderType.MongoDb, EmbeddingModelType.TextEmbedding3Large);	// Free tier doesn't support large
-			await LoadAndVectorize(RagProviderType.MongoDb, EmbeddingModelType.TextEmbedding3Small);
-			await LoadAndVectorize(RagProviderType.MongoDb, EmbeddingModelType.TextEmbeddingAda002);
+			//await InitializeAndVectorize(RagProviderType.MongoDb, EmbeddingModelType.TextEmbedding3Large);	// Free tier doesn't support large
+			await InitializeAndVectorize(RagProviderType.MongoDb, EmbeddingModelType.TextEmbedding3Small);
+			await InitializeAndVectorize(RagProviderType.MongoDb, EmbeddingModelType.TextEmbeddingAda002);
 
 			Console.WriteLine($"Completed in {DateTime.Now.Subtract(started)}");
 		}
 
-		private static async Task LoadAndVectorize(RagProviderType ragProviderType, EmbeddingModelType embeddingModelType)
+		private static async Task InitializeAndVectorize(RagProviderType ragProviderType, EmbeddingModelType embeddingModelType)
 		{
-			ConsoleOutput.WriteHeading($"Load & Vectorize - {ragProviderType} {embeddingModelType}", ConsoleColor.Green);
+			ConsoleOutput.WriteHeading($"Initialize & Vectorize - {ragProviderType} {embeddingModelType}", ConsoleColor.Green);
 
 			RagProviderFactory.RagProviderType = ragProviderType;
 			EmbeddingModelFactory.EmbeddingModelType = embeddingModelType;
@@ -266,7 +267,7 @@ namespace Rag.AIClient
 
 			try
 			{
-				await dataPopulator.LoadData();
+				await dataPopulator.InitializeData();
 				await dataVectorizer.VectorizeData();
 			}
 			catch (Exception ex)

@@ -15,7 +15,7 @@ DECLARE @MovieId int
 DECLARE @Title varchar(max)
 
 DECLARE curMovies CURSOR FOR
-	SELECT MovieId, Title FROM Movie
+	SELECT MovieId, Title FROM HelloWorld.Movie
 
 OPEN curMovies
 FETCH NEXT FROM curMovies INTO @MovieId, @Title
@@ -25,12 +25,12 @@ BEGIN
 
 	DELETE FROM @Vectors
 	INSERT INTO @Vectors
-		EXEC VectorizeText @Title
+		EXEC HelloWorld.VectorizeText @Title
 
 	DECLARE @VectorizeCount int = @@ROWCOUNT
 	PRINT CONCAT('Vectorized text "', @Title,  '" (', @VectorizeCount, ' values)')
 
-	INSERT INTO MovieVector
+	INSERT INTO HelloWorld.MovieVector
 		SELECT
 			@MovieId,
 			mv.VectorValueId,

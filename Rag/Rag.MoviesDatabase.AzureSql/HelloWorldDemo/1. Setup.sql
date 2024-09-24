@@ -1,26 +1,29 @@
 -- Connect to MovieDemo database
 
-DROP TABLE IF EXISTS Movie
-CREATE TABLE Movie (
+CREATE SCHEMA HelloWorld
+GO
+
+DROP TABLE IF EXISTS HelloWorld.Movie
+CREATE TABLE HelloWorld.Movie (
 	MovieId int IDENTITY,
 	Title varchar(50)
 )
 
-INSERT INTO Movie VALUES
+INSERT INTO HelloWorld.Movie VALUES
 	('Return of the Jedi'),
 	('The Godfather'),
 	('Animal House'),
 	('The Two Towers')
 
-DROP TABLE IF EXISTS MovieVector
-CREATE TABLE MovieVector (
+DROP TABLE IF EXISTS HelloWorld.MovieVector
+CREATE TABLE HelloWorld.MovieVector (
 	MovieId int,
 	VectorValueId int,
 	VectorValue float
 )
 
 GO
-CREATE OR ALTER PROCEDURE VectorizeText
+CREATE OR ALTER PROCEDURE HelloWorld.VectorizeText
 	@Text varchar(max)
 AS
 BEGIN
@@ -54,7 +57,7 @@ BEGIN
 END
 
 GO
-CREATE OR ALTER PROCEDURE AskQuestion
+CREATE OR ALTER PROCEDURE HelloWorld.AskQuestion
 	@Question varchar(max)
 AS
 BEGIN

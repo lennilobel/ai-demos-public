@@ -37,7 +37,8 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			}
 		}
 
-		public virtual string GetDataFilePath(string filename) => new FileInfo($@"Data\{filename}").FullName;
+		public virtual string GetDataFilePath(string filename) => this.GetDataFileLocalPath(filename);
+		public virtual string GetDataFileLocalPath(string filename) => new FileInfo($@"Data\{filename}").FullName;
 
 		public abstract IDataPopulator GetDataPopulator();
 

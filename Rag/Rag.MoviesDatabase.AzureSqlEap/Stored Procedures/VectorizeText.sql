@@ -1,11 +1,12 @@
 CREATE PROCEDURE VectorizeText
 	@Text varchar(max),
-	@OpenAIEndpoint varchar(max),
-	@OpenAIApiKey varchar(max),
-	@OpenAIDeploymentName varchar(max),
 	@Vectors varbinary(8000) OUTPUT
 AS
 BEGIN
+
+	DECLARE @OpenAIEndpoint varchar(max)		= (SELECT ConfigValue FROM AppConfig WHERE ConfigKey = 'OpenAIEndpoint')
+	DECLARE @OpenAIApiKey varchar(max)			= (SELECT ConfigValue FROM AppConfig WHERE ConfigKey = 'OpenAIApiKey')
+	DECLARE @OpenAIDeploymentName varchar(max)	= (SELECT ConfigValue FROM AppConfig WHERE ConfigKey = 'OpenAIDeploymentName')
 
 	DECLARE @Url varchar(max) = CONCAT(@OpenAIEndpoint, 'openai/deployments/', @OpenAIDeploymentName, '/embeddings?api-version=2023-03-15-preview')
 	DECLARE @Headers varchar(max) = JSON_OBJECT('api-key': @OpenAIApiKey)

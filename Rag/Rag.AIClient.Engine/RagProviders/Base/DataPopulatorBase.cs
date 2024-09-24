@@ -9,7 +9,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 		{
 		}
 
-		public abstract Task LoadData();
+		public abstract Task InitializeData();
 		public abstract Task ResetData();
 		public abstract Task UpdateData();
 	}

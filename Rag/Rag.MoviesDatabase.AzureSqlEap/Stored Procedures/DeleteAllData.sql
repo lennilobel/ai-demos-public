@@ -15,5 +15,6 @@ BEGIN
 	DELETE FROM		ProductionCompany
 	DELETE FROM		Genre
 	DELETE FROM		Movie
+	TRUNCATE TABLE	AppConfig
 
 END

@@ -18,7 +18,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 		{
 		}
 
-		public override async Task LoadData()
+		public override async Task InitializeData()
 		{
 			Debugger.Break();
 

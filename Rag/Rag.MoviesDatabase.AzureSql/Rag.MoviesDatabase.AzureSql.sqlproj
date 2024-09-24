@@ -124,7 +124,7 @@
     <Folder Include="Stored Procedures" />
     <Folder Include="Tables" />
     <Folder Include="Types" />
-    <Folder Include="SimpleVectorizeDemo" />
+    <Folder Include="HelloWorldDemo" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="BlobStorage\BlobStorageDataSource.sql" />
@@ -150,10 +150,14 @@
     <Build Include="Types\MovieVectorsUdt.sql" />
     <Build Include="Types\VectorsUdt.sql" />
     <Build Include="Stored Procedures\RunVectorSearch.sql" />
-    <None Include="SimpleVectorizeDemo\1. Setup.sql" />
-    <None Include="SimpleVectorizeDemo\2. VectorizeData.sql" />
-    <None Include="SimpleVectorizeDemo\3. Run Vector Query.sql" />
-    <None Include="SimpleVectorizeDemo\4. Cleanup.sql" />
+    <None Include="HelloWorldDemo\1. Setup.sql" />
+    <None Include="HelloWorldDemo\2. VectorizeData.sql" />
+    <None Include="HelloWorldDemo\3. Run Vector Query.sql" />
+    <None Include="HelloWorldDemo\4. Cleanup.sql" />
+    <Build Include="Tables\AppConfig.sql" />
+    <Build Include="Stored Procedures\LoadConfig.sql" />
+    <None Include="CreateRagDemoAzureSqlDatabase.sql" />
+    <Build Include="Stored Procedures\VectorizeMoviesBatch.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ProjectToAzureSqlDb.scmp" />

@@ -38,9 +38,6 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.AzureSql
 				storedProcedureParameters:
 				[
 					("@Question", question),
-					("@OpenAIEndpoint", Shared.AppConfig.OpenAI.Endpoint),
-					("@OpenAIApiKey", Shared.AppConfig.OpenAI.ApiKey),
-					("@OpenAIDeploymentName", EmbeddingModelFactory.GetDeploymentName()),
 				],
 				getResult: rdr =>
 				{

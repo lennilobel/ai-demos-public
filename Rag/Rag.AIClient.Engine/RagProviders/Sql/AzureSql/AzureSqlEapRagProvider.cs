@@ -1,8 +1,8 @@
 using Rag.AIClient.Engine.Config;
 
-namespace Rag.AIClient.Engine.RagProviders
+namespace Rag.AIClient.Engine.RagProviders.Sql.AzureSql
 {
-	public class AzureSqlEapRagProvider : AzureSqlRagProvider
+    public class AzureSqlEapRagProvider : AzureSqlRagProvider
     {
         public override string ProviderName => "Azure SQL Database (EAP)";
 

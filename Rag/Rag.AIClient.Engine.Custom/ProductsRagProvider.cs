@@ -1,10 +1,10 @@
 using Rag.AIClient.Engine.Config;
-using Rag.AIClient.Engine.RagProviders;
 using Rag.AIClient.Engine.RagProviders.Base;
+using Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb;
 
 namespace Rag.AIClient.Engine.Custom
 {
-	public class ProductsRagProvider : CosmosDbRagProvider
+    public class ProductsRagProvider : CosmosDbRagProvider
 	{
 		public override string ProviderName => "Products Custom Provider";
 
