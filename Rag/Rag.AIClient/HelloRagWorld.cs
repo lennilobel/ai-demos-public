@@ -35,37 +35,43 @@ namespace Rag.AIClient
 				new Movie { Title = "The Two Towers" },
 			];
 
-		private readonly string[] _queries =
+		private readonly string[][] _queries =
 			[
 				// Movie phrases
-				"May the force be with you",
-				"I'm gonna make him an offer he can't refuse",
-				"Toga party",
-				"One ring to rule them all",
-				null,
+				[
+					"May the force be with you",
+					"I'm gonna make him an offer he can't refuse",
+					"Toga party",
+					"One ring to rule them all",
+				],
 				// Movie characters
-				"Luke Skywalker",
-				"Don Corleone",
-				"James Blutarsky",
-				"Gandalf",
-				null,
+				[
+					"Luke Skywalker",
+					"Don Corleone",
+					"James Blutarsky",
+					"Gandalf",
+				],
 				// Movie actors
-				"Mark Hamill",
-				"Al Pacino",
-				"John Belushi",
-				"Elijah Wood",
-				null,
+				[
+					"Mark Hamill",
+					"Al Pacino",
+					"John Belushi",
+					"Elijah Wood",
+				],
 				// Movie location references
-				"Tatooine",
-				"Sicily",
-				"Faber College",
-				"Mordor",
-				null,
+				[
+					"Tatooine",
+					"Sicily",
+					"Faber College",
+					"Mordor",
+				],
 				// Movie genres
-				"Science fiction",
-				"Crime",
-				"Comedy",
-				"Fantasy/Adventure",
+				[
+					"Science fiction",
+					"Crime",
+					"Comedy",
+					"Fantasy/Adventure",
+				],
 			];
 
 
@@ -80,21 +86,20 @@ namespace Rag.AIClient
 			}
 
 			// Vectorize each query and run a vector search against the movies
-			foreach (var query in this._queries)
+			foreach (var querySet in this._queries)
 			{
-				if (query == null)
+				foreach (var query in querySet)
 				{
-					Console.WriteLine();
-					continue;
+					var queryVectors = await this.VectorizeText(query);
+					var movie = this.RunVectorSearch(queryVectors);
+
+					Console.ForegroundColor = ConsoleColor.Yellow; Console.Write($"{query,-50}");
+					Console.ForegroundColor = ConsoleColor.White; Console.Write("matches ");
+					Console.ForegroundColor = ConsoleColor.Green; Console.WriteLine(movie.Title);
+					Console.ResetColor();
 				}
 
-				var queryVectors = await this.VectorizeText(query);
-				var movie = this.RunVectorSearch(queryVectors);
-
-				Console.ForegroundColor = ConsoleColor.Yellow; Console.Write($"{query,-50}");
-				Console.ForegroundColor = ConsoleColor.White; Console.Write("matches ");
-				Console.ForegroundColor = ConsoleColor.Green; Console.WriteLine(movie.Title);
-				Console.ResetColor();
+				Console.WriteLine();
 			}
 		}
 
@@ -135,11 +140,11 @@ namespace Rag.AIClient
 					Movie = m,									// The current movie object
 					CosineDistance = queryVectors
 						.Zip(m.Vectors, (qv, mv) => qv * mv)	// Pair up the query vector with the movie's vector and compute the product
-						.Sum()									// Sum the product to calculate a form of similarity (cosine similarity)
+						.Sum()									// Sum the products to calculate a cosine similarity score
 				})
 				.OrderByDescending(r => r.CosineDistance)		// Sort movies by cosine similarity in descending order
 				.Select(r => r.Movie)							// Select the movie with the highest similarity score
-				.FirstOrDefault();								// Return the first (most similar) movie, or null if no movie is found
+				.First();										// Return the first (most similar) movie
 
 			// Return the movie that best matches the query vector
 			return result;
@@ -177,7 +182,7 @@ namespace Rag.AIClient
 			await this.AskAndAnswer(openAIClient, completionOptions, "Provide a summary of these movies: Return of the Jedi, The Godfather, Animal House, The Two Towers.");
 			await this.AskAndAnswer(openAIClient, completionOptions, "Only show the movie titles.");
 			await this.AskAndAnswer(openAIClient, completionOptions, "Go back to showing full descriptions. Also, include additional movies that I might like.");
-			await this.AskAndAnswer(openAIClient, completionOptions, "Go back to showing a summary of just the movies I asked about, with no additional recommendations, translated to Dutch.");
+			await this.AskAndAnswer(openAIClient, completionOptions, "Go back to showing a summary of just the movies I asked about, with no additional recommendations, translated to Spanish.");
 		}
 
 		private async Task AskAndAnswer(OpenAIClient openAIClient, ChatCompletionsOptions completionOptions, string question)
