@@ -1,9 +1,15 @@
--- Connect to MovieDemo database
+-- Connect to Azure SQL Database MovieDemo
+
+/*
+	*** Setup ***
+*/
+
+SET NOCOUNT ON
+GO
 
 CREATE SCHEMA HelloWorld
 GO
 
-DROP TABLE IF EXISTS HelloWorld.Movie
 CREATE TABLE HelloWorld.Movie (
 	MovieId int IDENTITY,
 	Title varchar(50)
@@ -15,7 +21,6 @@ INSERT INTO HelloWorld.Movie VALUES
 	('Animal House'),
 	('The Two Towers')
 
-DROP TABLE IF EXISTS HelloWorld.MovieVector
 CREATE TABLE HelloWorld.MovieVector (
 	MovieId int,
 	VectorValueId int,
@@ -23,18 +28,23 @@ CREATE TABLE HelloWorld.MovieVector (
 )
 
 GO
-CREATE OR ALTER PROCEDURE HelloWorld.VectorizeText
+CREATE PROCEDURE HelloWorld.VectorizeText
 	@Text varchar(max)
 AS
 BEGIN
 
-	DECLARE @Headers varchar(max) = JSON_OBJECT('api-key': '[API-KEY]')
+	DECLARE @OpenAIEndpoint varchar(max) = '[OPENAI-ENDPOINT]'
+	DECLARE @OpenAIApiKey varchar(max) = '[OPENAI-API-KEY]'
+	DECLARE @OpenAIDeploymentName varchar(max) = '[OPENAI-DEPLOYMENT-NAME]'
+
+	DECLARE @Url varchar(max) = CONCAT(@OpenAIEndpoint, 'openai/deployments/', @OpenAIDeploymentName, '/embeddings?api-version=2023-03-15-preview')
+	DECLARE @Headers varchar(max) = JSON_OBJECT('api-key': @OpenAIApiKey)
 	DECLARE @Payload varchar(max) = JSON_OBJECT('input': @Text)
 	DECLARE @Response nvarchar(max)
 	DECLARE @ReturnValue int
 
 	EXEC @ReturnValue = sp_invoke_external_rest_endpoint
-		@url = 'https://lenni-openai.openai.azure.com/openai/deployments/lenni-text-embedding-3-large/embeddings?api-version=2023-03-15-preview',
+		@url = @Url,
 		@method = 'POST',
 		@headers = @Headers,
 		@payload = @Payload,
@@ -57,7 +67,7 @@ BEGIN
 END
 
 GO
-CREATE OR ALTER PROCEDURE HelloWorld.AskQuestion
+CREATE PROCEDURE HelloWorld.AskQuestion
 	@Question varchar(max)
 AS
 BEGIN
@@ -68,16 +78,22 @@ BEGIN
 	)
 
 	INSERT INTO @QuestionVectors
-		EXEC VectorizeText @Question
+		EXEC HelloWorld.VectorizeText @Question
 
 	SELECT TOP 1
 		Question = @Question,
 		Answer = m.Title,
-		CosineDistance = SUM(qv.VectorValue * mv.VectorValue)	-- https://github.com/Azure-Samples/azure-sql-db-openai/blob/classic/vector-embeddings/05-find-similar-articles.sql
+		CosineDistance =
+			SUM(qv.VectorValue * mv.VectorValue) /	-- https://github.com/Azure-Samples/azure-sql-db-openai/blob/classic/vector-embeddings/05-find-similar-articles.sql
+		    (
+		        SQRT(SUM(qv.VectorValue * qv.VectorValue)) 
+		        * 
+		        SQRT(SUM(mv.VectorValue * mv.VectorValue))
+		    )
 	FROM
 		@QuestionVectors AS qv
-		INNER JOIN MovieVector AS mv on qv.VectorValueId = mv.VectorValueId
-		INNER JOIN Movie AS m ON m.MovieId = mv.MovieId
+		INNER JOIN HelloWorld.MovieVector AS mv on qv.VectorValueId = mv.VectorValueId
+		INNER JOIN HelloWorld.Movie AS m ON m.MovieId = mv.MovieId
 	GROUP BY
 		mv.MovieId,
 		m.Title

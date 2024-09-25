@@ -1,10 +1,9 @@
--- Connect to MovieDemo database
+/*
+	*** Vectorize Data ***
+*/
 
 SET NOCOUNT ON
-
-DECLARE @OpenAIEndpoint varchar(max) = '[OPENAI-ENDPOINT]'
-DECLARE @OpenAIApiKey varchar(max) = '[OPENAI-API-KEY]'
-DECLARE @OpenAIDeploymentName varchar(max) = '[OPENAI-DEPLOYMENT-NAME]'
+GO
 
 DECLARE @Vectors table (
 	VectorValueId int,
@@ -44,4 +43,3 @@ END
 
 CLOSE curMovies
 DEALLOCATE curMovies
-

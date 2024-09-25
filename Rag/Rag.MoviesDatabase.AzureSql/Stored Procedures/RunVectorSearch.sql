@@ -7,13 +7,13 @@ BEGIN
 
 	SELECT TOP 5
 		mv.MovieId, 
-		CosineDistance = SUM(qv.VectorValue * mv.VectorValue)	-- https://github.com/Azure-Samples/azure-sql-db-openai/blob/classic/vector-embeddings/05-find-similar-articles.sql
-		--CosineDistance = SUM(qv.VectorValue * mv.VectorValue) / 
-		--    (
-		--        SQRT(SUM(qv.VectorValue * qv.VectorValue)) 
-		--        * 
-		--        SQRT(SUM(mv.VectorValue * mv.VectorValue))
-		--    )
+		CosineDistance =
+			SUM(qv.VectorValue * mv.VectorValue) /	-- https://github.com/Azure-Samples/azure-sql-db-openai/blob/classic/vector-embeddings/05-find-similar-articles.sql
+		    (
+		        SQRT(SUM(qv.VectorValue * qv.VectorValue)) 
+		        * 
+		        SQRT(SUM(mv.VectorValue * mv.VectorValue))
+		    )
 	INTO
 		#SimilarityResults
 	FROM 

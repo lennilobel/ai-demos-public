@@ -156,7 +156,6 @@
     <None Include="HelloWorldDemo\4. Cleanup.sql" />
     <Build Include="Tables\AppConfig.sql" />
     <Build Include="Stored Procedures\LoadConfig.sql" />
-    <None Include="CreateRagDemoAzureSqlDatabase.sql" />
     <Build Include="Stored Procedures\VectorizeMoviesBatch.sql" />
   </ItemGroup>
   <ItemGroup>

@@ -148,6 +148,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ProjectToSqlServer.scmp" />
-    <None Include="CreateRagDemoSqlServerDatabase.sql" />
   </ItemGroup>
 </Project>

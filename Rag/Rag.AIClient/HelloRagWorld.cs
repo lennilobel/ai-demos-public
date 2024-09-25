@@ -133,16 +133,16 @@ namespace Rag.AIClient
 
 		private Movie RunVectorSearch(float[] queryVectors)
 		{
-			// Perform a vector search by comparing the query vector against each movie's vector
+			// Perform a vector search by comparing the query vector against each movie's vector using the Dot Product metric
 			var result = this._movies
 				.Select(m => new
 				{
 					Movie = m,									// The current movie object
-					CosineDistance = queryVectors
+					Distance = queryVectors
 						.Zip(m.Vectors, (qv, mv) => qv * mv)	// Pair up the query vector with the movie's vector and compute the product
-						.Sum()									// Sum the products to calculate a cosine similarity score
+						.Sum()									// Sum the products to calculate a Dot Product similarity score
 				})
-				.OrderByDescending(r => r.CosineDistance)		// Sort movies by cosine similarity in descending order
+				.OrderByDescending(r => r.Distance)				// Sort results by Dot Product similarity in descending order
 				.Select(r => r.Movie)							// Select the movie with the highest similarity score
 				.First();										// Return the first (most similar) movie
 

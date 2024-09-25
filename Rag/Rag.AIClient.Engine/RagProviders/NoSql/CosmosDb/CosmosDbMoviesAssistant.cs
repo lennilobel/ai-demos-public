@@ -89,45 +89,27 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 		// Use the VectorDistance function to calculate a similarity score, and use TOP n with ORDER BY to retrieve the most relevant documents
 		//  (by using a subquery, we only need to call VectorDistance once in the inner SELECT clause, and can reuse it in the outer ORDER BY clause)
 		protected virtual string GetVectorSearchSql() =>
-            @"
-                  SELECT TOP 5
-                    vd.id,
-                    vd.title,
-                    vd.budget,
-                    vd.genres,
-                    vd.original_language,
-                    vd.original_title,
-                    vd.overview,
-                    vd.popularity,
-                    vd.production_companies,
-                    vd.release_date,
-                    vd.revenue,
-                    vd.runtime,
-                    vd.spoken_languages,
-                    vd.video,
-                    vd.similarity_score
-                FROM (
-                    SELECT
-                        c.id,
-						c.title,
-                        c.budget,
-                        c.genres,
-                        c.original_language,
-                        c.original_title,
-                        c.overview,
-                        c.popularity,
-                        c.production_companies,
-                        c.release_date,
-                        c.revenue,
-                        c.runtime,
-                        c.spoken_languages,
-                        c.video,
-                        VectorDistance(c.vectors, @vectors, false) AS similarity_score
-                    FROM
-                        c
-                ) AS vd
+			@"
+                SELECT TOP 5
+                    c.id,
+                    c.title,
+                    c.budget,
+                    c.genres,
+                    c.original_language,
+                    c.original_title,
+                    c.overview,
+                    c.popularity,
+                    c.production_companies,
+                    c.release_date,
+                    c.revenue,
+                    c.runtime,
+                    c.spoken_languages,
+                    c.video,
+                    VectorDistance(c.vectors, @vectors) AS similarity_score
+                FROM
+                    c
                 ORDER BY
-                    vd.similarity_score DESC
+                    VectorDistance(c.vectors, @vectors)
 			";
 
 	}
