@@ -114,7 +114,7 @@ namespace Rag.MoviesFunction.CosmosDb
 		{
 			this._logger.LogInformation($"Generating vector embeddings for {documents.Length} document(s)");
 
-			// Strip meaningless properties and any previous vectors from each document
+			// Strip meaningless properties and any previous vector from each document
 			foreach (var document in documents)
 			{
 				document.Remove("_rid");
@@ -124,7 +124,7 @@ namespace Rag.MoviesFunction.CosmosDb
 				document.Remove("_lsn");
 				document.Remove("_ts");
 				document.Remove("ttl");
-				document.Remove("vectors");
+				document.Remove("vector");
 			}
 
 			var embeddingsOptions = new EmbeddingsOptions(
@@ -147,9 +147,9 @@ namespace Rag.MoviesFunction.CosmosDb
 
 			for (var i = 0; i < documents.Length; i++)
 			{
-				var vectorsArray = embeddings[i].Embedding.ToArray();
-				var vectorsJArray = JArray.FromObject(vectorsArray);
-				documents[i]["vectors"] = vectorsJArray;
+				var vectorArray = embeddings[i].Embedding.ToArray();
+				var vectorJArray = JArray.FromObject(vectorArray);
+				documents[i]["vector"] = vectorJArray;
 			}
 
 			var tasks = new List<Task>(documents.Length);

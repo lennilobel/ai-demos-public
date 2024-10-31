@@ -1,4 +1,4 @@
-CREATE TYPE VectorsUdt AS TABLE (
+CREATE TYPE VectorUdt AS TABLE (
 	VectorValueId int,
 	VectorValue float
 )

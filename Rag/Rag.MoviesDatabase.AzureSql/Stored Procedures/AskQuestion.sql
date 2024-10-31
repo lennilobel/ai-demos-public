@@ -3,11 +3,11 @@ CREATE PROCEDURE AskQuestion
 AS
 BEGIN
 
-	DECLARE @Vectors VectorsUdt
+	DECLARE @Vector VectorUdt
 
-	INSERT INTO @Vectors
+	INSERT INTO @Vector
 		EXEC VectorizeText @Question
 
-	EXEC RunVectorSearch @Vectors
+	EXEC RunVectorSearch @Vector
 
 END

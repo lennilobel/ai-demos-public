@@ -148,7 +148,6 @@
     <Build Include="Stored Procedures\RunVectorSearch.sql" />
     <None Include="AlterDatabaseForVector1536DataType.sql" />
     <Build Include="Tables\AppConfig.sql" />
-    <None Include="CreateRagDemoAzureSqlEapDatabase.sql" />
     <Build Include="Stored Procedures\LoadConfig.sql" />
     <None Include="EapDocs\migrate-to-vector-type.sql" />
   </ItemGroup>

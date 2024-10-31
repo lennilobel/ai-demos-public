@@ -55,53 +55,30 @@ namespace Rag.AIClient.Engine.Custom
 		protected override string GetVectorSearchSql() =>
 			@"
                   SELECT TOP 10
-                    vd.id,
-                    vd.title,
-                    vd.description,
-                    vd.category,
-                    vd.price,
-                    vd.discountPercentage,
-                    vd.rating,
-                    vd.stock,
-                    vd.tags,
-                    vd.brand,
-                    vd.sku,
-                    vd.weight,
-                    vd.dimensions,
-                    vd.warrantyInformation,
-                    vd.shippingInformation,
-                    vd.availabilityStatus,
-                    vd.reviews,
-                    vd.returnPolicy,
-                    vd.minimumOrderQuantity,
-                    vd.SimilarityScore
-                FROM (
-                    SELECT
-                        c.id,
-                        c.title,
-                        c.description,
-                        c.category,
-                        c.price,
-                        c.discountPercentage,
-                        c.rating,
-                        c.stock,
-                        c.tags,
-                        c.brand,
-                        c.sku,
-                        c.weight,
-                        c.dimensions,
-                        c.warrantyInformation,
-                        c.shippingInformation,
-                        c.availabilityStatus,
-                        c.reviews,
-                        c.returnPolicy,
-                        c.minimumOrderQuantity,
-                        VectorDistance(c.vectors, @vectors, false) AS SimilarityScore
-                    FROM
-                        c
-                ) AS vd
+                    c.id,
+                    c.title,
+                    c.description,
+                    c.category,
+                    c.price,
+                    c.discountPercentage,
+                    c.rating,
+                    c.stock,
+                    c.tags,
+                    c.brand,
+                    c.sku,
+                    c.weight,
+                    c.dimensions,
+                    c.warrantyInformation,
+                    c.shippingInformation,
+                    c.availabilityStatus,
+                    c.reviews,
+                    c.returnPolicy,
+                    c.minimumOrderQuantity,
+                    VectorDistance(c.vector, @vector) AS similarityScore
+                FROM
+                    c
                 ORDER BY
-                    vd.SimilarityScore DESC
+                    VectorDistance(c.vector, @vector)
 			";
 
     }

@@ -201,7 +201,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			this.ConsoleWriteWaitingFor("Vectorizing question");
 
-			var vectors = default(float[]);
+			var vector = default(float[]);
 			try
 			{
 				var embeddingsOptions = new EmbeddingsOptions(
@@ -210,7 +210,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 				var embeddings = await Shared.OpenAIClient.GetEmbeddingsAsync(embeddingsOptions);
 				var embeddingItems = embeddings.Value.Data;
-				vectors = embeddingItems[0].Embedding.ToArray();
+				vector = embeddingItems[0].Embedding.ToArray();
 			}
 			catch (Exception ex)
 			{
@@ -220,7 +220,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			this._elapsedVectorizeQuestion = DateTime.Now.Subtract(started);
 
-			return vectors;
+			return vector;
 		}
 
 		protected abstract Task<JObject[]> GetDatabaseResults(string question);
@@ -283,7 +283,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			var counter = 0;
 			foreach (var result in results)
 			{
-				sb.AppendLine($"{++counter}. {result.title}");
+				sb.AppendLine($"{++counter}. {result.title ?? result.Title}");
 			}
 
 			var imagePrompt = sb.ToString();

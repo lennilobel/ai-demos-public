@@ -48,10 +48,10 @@ BEGIN
             OPENJSON(@Response, '$.result.data')                    -- each movie is an element in the result's data array
         WITH (
             MovieIndex int '$.index',
-            Embedding nvarchar(max) '$.embedding' AS JSON           -- each movie's vectors are retrieved from the embedding array in the data array of each result
+            Embedding nvarchar(max) '$.embedding' AS JSON           -- each movie's vector is retrieved from the embedding array in the data array of each result
         ) AS ResultData
         CROSS APPLY
-            OPENJSON(ResultData.Embedding) AS ResultDataEmbedding   -- get the embedding array (vectors for a single movie) from each element in the data array (movies)
+            OPENJSON(ResultData.Embedding) AS ResultDataEmbedding   -- get the embedding array (vector for a single movie) from each element in the data array (movies)
     )
     -- Compose the result by joining the MoviesCte with EmbeddingsCte based on the MovieIndex
     SELECT 

@@ -42,7 +42,7 @@ Common functionality is implemented in a set of shared base classes, while indiv
 
 - Azure SQL Database loads the initial data by shredding a JSON file from Azure Blob Storage into relational tables.
 - Azure SQL Database calls OpenAI (via sp_invoke_external_rest_endpoint) to vectorize movies in the database and natural language questions posed by users.
-- Movie vectors are efficiently stored and indexed in a varbinary(8000) column in the Movie table.
+- Movie vectors are efficiently stored and indexed in a native vector data type column in the Movie table.
 - Vector searching is performed using the VECTOR_DISTANCE function.
 - The client application is responsible for coordinating vectorization with new movies as they are added/updated.
 

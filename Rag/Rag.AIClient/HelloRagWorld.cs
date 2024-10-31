@@ -24,7 +24,7 @@ namespace Rag.AIClient
 		private class Movie
 		{
 			public string Title { get; set; }
-			public float[] Vectors { get; set; }
+			public float[] Vector { get; set; }
 		}
 
 		private readonly Movie[] _movies =
@@ -82,7 +82,7 @@ namespace Rag.AIClient
 			// Vectorize the movies
 			foreach (var movie in this._movies)
 			{
-				movie.Vectors = await this.VectorizeText(movie.Title);
+				movie.Vector = await this.VectorizeText(movie.Title);
 			}
 
 			// Vectorize each query and run a vector search against the movies
@@ -90,8 +90,8 @@ namespace Rag.AIClient
 			{
 				foreach (var query in querySet)
 				{
-					var queryVectors = await this.VectorizeText(query);
-					var movie = this.RunVectorSearch(queryVectors);
+					var queryVector = await this.VectorizeText(query);
+					var movie = this.RunVectorSearch(queryVector);
 
 					Console.ForegroundColor = ConsoleColor.Yellow; Console.Write($"{query,-50}");
 					Console.ForegroundColor = ConsoleColor.White; Console.Write("matches ");
@@ -125,21 +125,21 @@ namespace Rag.AIClient
 			var embeddings = openAIEmbeddings.Value.Data;
 
 			// Convert the first embedding from the response to an array of float values (the vector)
-			var vectors = embeddings[0].Embedding.ToArray();
+			var vector = embeddings[0].Embedding.ToArray();
 
 			// Return the vectorized representation of the input text
-			return vectors;
+			return vector;
 		}
 
-		private Movie RunVectorSearch(float[] queryVectors)
+		private Movie RunVectorSearch(float[] queryVector)
 		{
-			// Perform a vector search by comparing the query vector against each movie's vector using the Dot Product metric
+			// Perform a vector search by comparing the query vector against each movie's vector using the Dot Product distance metric
 			var result = this._movies
 				.Select(m => new
 				{
 					Movie = m,									// The current movie object
-					Distance = queryVectors
-						.Zip(m.Vectors, (qv, mv) => qv * mv)	// Pair up the query vector with the movie's vector and compute the product
+					Distance = queryVector
+						.Zip(m.Vector, (qv, mv) => qv * mv)		// Pair up the query vector with the movie's vector and compute the product
 						.Sum()									// Sum the products to calculate a Dot Product similarity score
 				})
 				.OrderByDescending(r => r.Distance)				// Sort results by Dot Product similarity in descending order
@@ -182,7 +182,7 @@ namespace Rag.AIClient
 			await this.AskAndAnswer(openAIClient, completionOptions, "Provide a summary of these movies: Return of the Jedi, The Godfather, Animal House, The Two Towers.");
 			await this.AskAndAnswer(openAIClient, completionOptions, "Only show the movie titles.");
 			await this.AskAndAnswer(openAIClient, completionOptions, "Go back to showing full descriptions. Also, include additional movies that I might like.");
-			await this.AskAndAnswer(openAIClient, completionOptions, "Go back to showing a summary of just the movies I asked about, with no additional recommendations, translated to Spanish.");
+			await this.AskAndAnswer(openAIClient, completionOptions, "Go back to showing a summary of just the movies I asked about, with no additional recommendations, translated to Dutch.");
 		}
 
 		private async Task AskAndAnswer(OpenAIClient openAIClient, ChatCompletionsOptions completionOptions, string question)

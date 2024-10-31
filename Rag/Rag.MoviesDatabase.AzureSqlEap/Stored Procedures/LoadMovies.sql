@@ -97,7 +97,7 @@ BEGIN
 		Video,
 		VoteAverage,
 		VoteCount,
-		Vectors = NULL
+		Vector = NULL
 	FROM
 		#Movie AS t
 	WHERE

@@ -1,6 +1,6 @@
 CREATE PROCEDURE VectorizeText
 	@Text varchar(max),
-	@Vectors varbinary(8000) OUTPUT
+	@Vector varbinary(8000) OUTPUT
 AS
 BEGIN
 
@@ -24,8 +24,8 @@ BEGIN
 	IF @ReturnValue != 0
 		THROW 50000, @Response, 1
 
-	DECLARE @VectorsJson nvarchar(max) = JSON_QUERY(@Response, '$.result.data[0].embedding');
+	DECLARE @VectorJson nvarchar(max) = JSON_QUERY(@Response, '$.result.data[0].embedding')
 
-	SET @Vectors = JSON_ARRAY_TO_VECTOR(@VectorsJson);
+	SET @Vector = JSON_ARRAY_TO_VECTOR(@VectorJson)
 
 END

@@ -55,7 +55,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 					ConsoleOutput.WriteLine($"{++itemCount,5}: Vectorizing entity - {document[base.RagProvider.EntityTitleFieldName]} (ID {document["id"]})", ConsoleColor.DarkCyan);
 				}
 
-                // Generate text embeddings (vectors) for the batch of documents
+                // Generate vectors for the batch of documents
                 var embeddings = await this.GenerateEmbeddings(documents);
 
                 // Update the documents back to the container with generated text embeddings (vectors)
@@ -76,7 +76,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
         {
             ConsoleOutput.Write("Generating embeddings... ", ConsoleColor.Green);
 
-            // Strip meaningless properties and any previous vectors from each document
+            // Strip meaningless properties and any previous vector from each document
             foreach (var document in documents)
             {
                 document.Remove("_rid");
@@ -85,7 +85,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
                 document.Remove("_attachments");
                 document.Remove("_ts");
                 document.Remove("ttl");
-                document.Remove("vectors");
+                document.Remove("vector");
             }
 
             // Generate embeddings based on the JSON string content of each document
@@ -106,12 +106,12 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
         {
             ConsoleOutput.Write("Saving vectors... ", ConsoleColor.Green);
 
-            // Set the vectors property of each document from the generated embeddings
+            // Set the vector property of each document from the generated embeddings
             for (var i = 0; i < documents.Length; i++)
             {
                 var embeddingsArray = embeddings[i].Embedding.ToArray();
-                var vectors = JArray.FromObject(embeddingsArray);
-                documents[i]["vectors"] = vectors;
+                var vector = JArray.FromObject(embeddingsArray);
+                documents[i]["vector"] = vector;
             }
 
             // Use bulk execution to update the documents back to the container

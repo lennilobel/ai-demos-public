@@ -10,9 +10,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hiker.SemanticKernel", "Hiker\Hiker.SemanticKernel\Hiker.SemanticKernel.csproj", "{1E320114-8C93-45A5-AF74-F1FD61D9B404}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Rag", "Rag", "{A26C02A9-2032-4EBD-B7A1-90E82810D095}"
-	ProjectSection(SolutionItems) = preProject
-		Rag\README.md = Rag\README.md
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hiker.Shared", "Hiker\Hiker.Shared\Hiker.Shared.csproj", "{2ADEE3E0-8428-43F2-88D1-31CA7B82388B}"
 EndProject
@@ -23,11 +20,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rag.MoviesFunction.CosmosDb", "Rag\Rag.MoviesFunction.CosmosDb\Rag.MoviesFunction.CosmosDb.csproj", "{1C7C2973-8F1C-4B3E-B15E-F3F869DFF9A9}"
 EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Rag.MoviesDatabase.AzureSqlEap", "Rag\Rag.MoviesDatabase.AzureSqlEap\Rag.MoviesDatabase.AzureSqlEap.sqlproj", "{C4D8CB4C-382D-40E6-808A-E43183CB113F}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{09C06354-DCD8-4713-8DE3-312C59E00E75}"
-	ProjectSection(SolutionItems) = preProject
-		README.md = README.md
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rag.AIClient", "Rag\Rag.AIClient\Rag.AIClient.csproj", "{964AC1D8-6825-4E87-809C-139FF9555B8D}"
 EndProject

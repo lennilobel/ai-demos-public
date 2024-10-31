@@ -53,7 +53,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 						new BsonDocument
 						{
 							{ "name", "VectorSearchIndex" },
-							{ "key", new BsonDocument { { "vectors", "cosmosSearch" } } },	// property path to generated vector array
+							{ "key", new BsonDocument { { "vector", "cosmosSearch" } } },	// property path to generated vector array
 							{ "cosmosSearchOptions", new BsonDocument
 								{
 									{ "kind", "vector-ivf" },	// use IVF (Inverted File) algorithm (max 2000 dimensions for ivfflat index)

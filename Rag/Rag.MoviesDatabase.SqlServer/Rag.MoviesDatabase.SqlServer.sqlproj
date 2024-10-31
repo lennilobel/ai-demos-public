@@ -142,7 +142,7 @@
     <Build Include="Tables\ProductionCountry.sql" />
     <Build Include="Tables\SpokenLanguage.sql" />
     <Build Include="Types\MovieVectorsUdt.sql" />
-    <Build Include="Types\VectorsUdt.sql" />
+    <Build Include="Types\VectorUdt.sql" />
     <Build Include="Stored Procedures\DeleteStarWarsTrilogy.sql" />
     <Build Include="Stored Procedures\DeleteMovie.sql" />
   </ItemGroup>

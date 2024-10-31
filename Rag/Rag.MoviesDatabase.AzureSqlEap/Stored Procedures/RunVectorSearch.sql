@@ -1,5 +1,5 @@
 CREATE PROCEDURE RunVectorSearch
-	@Vectors varbinary(8000)
+	@Vector varbinary(8000)
 AS
 BEGIN
 
@@ -7,7 +7,7 @@ BEGIN
 
 	SELECT
 		MovieId,
-		SimilarityScore = VECTOR_DISTANCE('cosine', @Vectors, Vectors)
+		SimilarityScore = VECTOR_DISTANCE('cosine', @Vector, Vector)
 	INTO
 		#SimilarityResults
 	FROM

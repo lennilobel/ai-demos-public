@@ -20,16 +20,16 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 
 		protected override async Task<JObject[]> GetDatabaseResults(string question)
 		{
-			// Generate vectors from a natural language query (Embeddings API using a text embedding model)
-			var vectors = await base.VectorizeQuestion(question);
+			// Generate vector from a natural language query (Embeddings API using a text embedding model)
+			var vector = await base.VectorizeQuestion(question);
 
 			// Run a vector search in our database (Cosmos DB NoSQL API vector support)
-			var results = await this.RunVectorSearch(vectors);
+			var results = await this.RunVectorSearch(vector);
 
 			return results;
 		}
 
-		protected async Task<JObject[]> RunVectorSearch(float[] vectors)
+		protected async Task<JObject[]> RunVectorSearch(float[] vector)
 		{
 			var started = DateTime.Now;
 
@@ -48,7 +48,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 
 			try
 			{
-				var query = new QueryDefinition(sql).WithParameter("@vectors", vectors);
+				var query = new QueryDefinition(sql).WithParameter("@vector", vector);
 				var iterator = container.GetItemQueryIterator<JObject>(query);
 				var results = new List<JObject>();
 
@@ -87,7 +87,6 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 		}
 
 		// Use the VectorDistance function to calculate a similarity score, and use TOP n with ORDER BY to retrieve the most relevant documents
-		//  (by using a subquery, we only need to call VectorDistance once in the inner SELECT clause, and can reuse it in the outer ORDER BY clause)
 		protected virtual string GetVectorSearchSql() =>
 			@"
                 SELECT TOP 5
@@ -105,11 +104,11 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
                     c.runtime,
                     c.spoken_languages,
                     c.video,
-                    VectorDistance(c.vectors, @vectors) AS similarity_score
+                    VectorDistance(c.vector, @vector) AS similarity_score
                 FROM
                     c
                 ORDER BY
-                    VectorDistance(c.vectors, @vectors)
+                    VectorDistance(c.vector, @vector)
 			";
 
 	}

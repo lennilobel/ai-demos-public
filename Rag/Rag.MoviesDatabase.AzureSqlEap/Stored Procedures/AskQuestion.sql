@@ -3,10 +3,10 @@ CREATE PROCEDURE AskQuestion
 AS
 BEGIN
 
-	DECLARE @Vectors varbinary(8000)
+	DECLARE @Vector varbinary(8000)
 
-	EXEC VectorizeText @Question, @Vectors OUTPUT
+	EXEC VectorizeText @Question, @Vector OUTPUT
 
-	EXEC RunVectorSearch @Vectors
+	EXEC RunVectorSearch @Vector
 
 END

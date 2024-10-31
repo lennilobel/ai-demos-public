@@ -1,13 +1,13 @@
 ALTER TABLE Movie
-DROP COLUMN Vectors
+DROP COLUMN Vector
 
 ALTER TABLE Movie
-ADD Vectors vector(1536)
+ADD Vector vector(1536)
 GO
 
 ALTER PROCEDURE VectorizeText
 	@Text varchar(max),
-	@Vectors vector(1536) OUTPUT	-- *EAP*
+	@Vector vector(1536) OUTPUT	-- *EAP*
 AS
 BEGIN
 
@@ -31,9 +31,9 @@ BEGIN
 	IF @ReturnValue != 0
 		THROW 50000, @Response, 1
 
-	DECLARE @VectorsJson nvarchar(max) = JSON_QUERY(@Response, '$.result.data[0].embedding')
+	DECLARE @VectorJson nvarchar(max) = JSON_QUERY(@Response, '$.result.data[0].embedding')
 
-	SET @Vectors = CONVERT(vector(1536), @VectorsJson)
+	SET @Vector = CONVERT(vector(1536), @VectorJson)
 
 END
 GO
@@ -73,13 +73,13 @@ BEGIN
 		DECLARE @Message varchar(max) = CONCAT('Vectorizing movie ID ', @MovieId, ' - ', @Title)
 		RAISERROR(@Message, 0, 1) WITH NOWAIT
 
-		DECLARE @MovieVectors vector(1536)	-- *EAP*
+		DECLARE @MovieVector vector(1536)	-- *EAP*
 
 		BEGIN TRY
 
 			EXEC VectorizeText
 				@MovieJson,
-				@MovieVectors OUTPUT
+				@MovieVector OUTPUT
 
 		END TRY
 
@@ -95,7 +95,7 @@ BEGIN
 		END CATCH
 
 		UPDATE Movie
-		SET Vectors = @MovieVectors
+		SET Vector = @MovieVector
 		WHERE MovieId = @MovieId
 
 		FETCH NEXT FROM curMovies INTO @MovieJson
@@ -112,7 +112,7 @@ END
 GO
 
 ALTER PROCEDURE RunVectorSearch
-	@Vectors vector(1536)	-- *EAP*
+	@Vector vector(1536)	-- *EAP*
 AS
 BEGIN
 
@@ -120,7 +120,7 @@ BEGIN
 
 	SELECT
 		MovieId,
-		SimilarityScore = VECTOR_DISTANCE('cosine', @Vectors, Vectors)
+		SimilarityScore = VECTOR_DISTANCE('cosine', @Vector, Vector)
 	INTO
 		#SimilarityResults
 	FROM
@@ -144,10 +144,10 @@ ALTER PROCEDURE AskQuestion
 AS
 BEGIN
 
-	DECLARE @Vectors vector(1536)	-- *EAP*
+	DECLARE @Vector vector(1536)	-- *EAP*
 
-	EXEC VectorizeText @Question, @Vectors OUTPUT
+	EXEC VectorizeText @Question, @Vector OUTPUT
 
-	EXEC RunVectorSearch @Vectors
+	EXEC RunVectorSearch @Vector
 
 END

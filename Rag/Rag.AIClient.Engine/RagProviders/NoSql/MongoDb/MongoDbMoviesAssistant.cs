@@ -20,15 +20,15 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 		protected override async Task<JObject[]> GetDatabaseResults(string question)
 		{
 			// Generate vectors from a natural language query (Embeddings API using a text embedding model)
-			var vectors = await base.VectorizeQuestion(question);
+			var vector = await base.VectorizeQuestion(question);
 
 			// Run a vector search in our database (Mongo DB vCore API vector support)
-			var results = await this.RunVectorSearch(vectors);
+			var results = await this.RunVectorSearch(vector);
 
 			return results;
 		}
 
-		private async Task<JObject[]> RunVectorSearch(float[] vectors)
+		private async Task<JObject[]> RunVectorSearch(float[] vector)
 		{
 			var databaseName = base.RagProvider.DatabaseName;
 			var collectionName = base.RagProvider.MongoDbConfig.CollectionName;
@@ -42,8 +42,8 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 					{
 						{ "cosmosSearch", new JObject
 							{
-								{ "vector", new JArray(vectors) },
-								{ "path", "vectors" },  // Path to the vectors field
+								{ "vector", new JArray(vector) },
+								{ "path", "vector" },  // Path to the vector field
 								{ "k", 5 }
 							}
 						}

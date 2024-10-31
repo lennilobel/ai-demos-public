@@ -18,28 +18,28 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 
 		protected override async Task<JObject[]> GetDatabaseResults(string question)
 		{
-			// Generate vectors from a natural language query (Embeddings API using a text embedding model)
-			var vectors = await base.VectorizeQuestion(question);
+			// Generate vector from a natural language query (Embeddings API using a text embedding model)
+			var vector = await base.VectorizeQuestion(question);
 
 			// Run a vector search in our database (SQL Server similarity query)
-			var results = await this.RunVectorSearch(vectors);
+			var results = await this.RunVectorSearch(vector);
 
 			return results;
 		}
 
-		private async Task<JObject[]> RunVectorSearch(float[] vectors)
+		private async Task<JObject[]> RunVectorSearch(float[] vector)
         {
             var started = DateTime.Now;
 
             base.ConsoleWriteWaitingFor("Running vector search");
 
-            var vectorsTable = new DataTable();
-            vectorsTable.Columns.Add("VectorValueId", typeof(int));
-            vectorsTable.Columns.Add("VectorValue", typeof(float));
+            var vectorTable = new DataTable();
+            vectorTable.Columns.Add("VectorValueId", typeof(int));
+            vectorTable.Columns.Add("VectorValue", typeof(float));
 
-            for (var i = 0; i < vectors.Length; i++)
+            for (var i = 0; i < vector.Length; i++)
             {
-                vectorsTable.Rows.Add(i + 1, vectors[i]);
+                vectorTable.Rows.Add(i + 1, vector[i]);
             }
 
             var results = new List<JObject>();
@@ -49,7 +49,7 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
                 storedProcedureName: "RunVectorSearch",
                 storedProcedureParameters: 
 				[
-					("@Vectors", vectorsTable)
+					("@Vector", vectorTable)
 				],
                 getResult: rdr =>
 				{

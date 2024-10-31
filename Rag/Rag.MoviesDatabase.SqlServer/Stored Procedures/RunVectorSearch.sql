@@ -1,5 +1,5 @@
 CREATE PROCEDURE RunVectorSearch
-	@Vectors VectorsUdt READONLY
+	@Vector VectorUdt READONLY
 AS
 BEGIN
 
@@ -7,22 +7,24 @@ BEGIN
 
 	SELECT TOP 5
 		mv.MovieId, 
-		CosineDistance =
-			SUM(qv.VectorValue * mv.VectorValue) /	-- https://github.com/Azure-Samples/azure-sql-db-openai/blob/classic/vector-embeddings/05-find-similar-articles.sql
-		    (
-		        SQRT(SUM(qv.VectorValue * qv.VectorValue)) 
-		        * 
-		        SQRT(SUM(mv.VectorValue * mv.VectorValue))
-		    )
+		CosineDistance =										-- Calculate the cosine distance as:
+			1 -														--	one minus
+			(														--	(
+				SUM(qv.VectorValue * mv.VectorValue) /				--		dot product (sum of the element-wise multiplication of corresponding vector values from the question and movie vectors) divided by
+				(													--		(
+					SQRT(SUM(qv.VectorValue * qv.VectorValue)) *	--			magnitude of the question vector (square root of the sum of squares of the question vector values) times
+					SQRT(SUM(mv.VectorValue * mv.VectorValue))		--			magnitude of the movie vector (square root of the sum of squares of the movie vector values)
+				)													--		)
+			)														--	)
 	INTO
 		#SimilarityResults
 	FROM 
-		@Vectors AS qv
+		@Vector AS qv
 		INNER JOIN MovieVector AS mv on qv.VectorValueId = mv.VectorValueId
 	GROUP BY
 		mv.MovieId
 	ORDER BY
-		CosineDistance DESC
+		CosineDistance	-- Smaller distances (more similar) before larger distances (less similar)
 
 	SELECT
 		MovieJson = dbo.GetMoviesJsonUdf(r.MovieId),
@@ -31,6 +33,6 @@ BEGIN
 		#SimilarityResults AS r
 		INNER JOIN Movie AS m ON m.MovieId = r.MovieId
 	ORDER BY
-		CosineDistance DESC
+		CosineDistance
 	
 END

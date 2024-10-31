@@ -95,10 +95,10 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
             for (var i = 0; i < documents.Length; i++)
             {
                 var movieId = documents[i]["MovieId"].Value<int>();
-                var vectors = embeddings[i].Embedding;
+                var vector = embeddings[i].Embedding;
 
                 var vectorValueId = 1;
-                foreach (var vectorValue in vectors.ToArray())
+                foreach (var vectorValue in vector.ToArray())
                 {
                     movieVectors.Rows.Add(new object[]
                     {

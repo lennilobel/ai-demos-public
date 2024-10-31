@@ -33,13 +33,13 @@ BEGIN
 		DECLARE @Message varchar(max) = CONCAT('Vectorizing movie ID ', @MovieId, ' - ', @Title)
 		RAISERROR(@Message, 0, 1) WITH NOWAIT
 
-		DECLARE @MovieVectors varbinary(8000)
+		DECLARE @MovieVector varbinary(8000)
 
 		BEGIN TRY
 
 			EXEC VectorizeText
 				@MovieJson,
-				@MovieVectors OUTPUT
+				@MovieVector OUTPUT
 
 		END TRY
 
@@ -55,7 +55,7 @@ BEGIN
 		END CATCH
 
 		UPDATE Movie
-		SET Vectors = @MovieVectors
+		SET Vector = @MovieVector
 		WHERE MovieId = @MovieId
 
 		FETCH NEXT FROM curMovies INTO @MovieJson

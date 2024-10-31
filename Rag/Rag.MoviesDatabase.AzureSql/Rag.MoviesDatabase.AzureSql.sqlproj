@@ -148,15 +148,17 @@
     <Build Include="Tables\SpokenLanguage.sql" />
     <Build Include="BlobStorage\BlobStorageCredential.sql" />
     <Build Include="Types\MovieVectorsUdt.sql" />
-    <Build Include="Types\VectorsUdt.sql" />
+    <Build Include="Types\VectorUdt.sql" />
     <Build Include="Stored Procedures\RunVectorSearch.sql" />
-    <None Include="HelloWorldDemo\1. Setup.sql" />
-    <None Include="HelloWorldDemo\2. VectorizeData.sql" />
-    <None Include="HelloWorldDemo\3. Run Vector Query.sql" />
-    <None Include="HelloWorldDemo\4. Cleanup.sql" />
     <Build Include="Tables\AppConfig.sql" />
     <Build Include="Stored Procedures\LoadConfig.sql" />
     <Build Include="Stored Procedures\VectorizeMoviesBatch.sql" />
+    <Build Include="HelloWorldDemo\1. Create Database.sql" />
+    <Build Include="HelloWorldDemo\2. Setup.sql" />
+    <Build Include="HelloWorldDemo\3. Vectorize Data.sql" />
+    <Build Include="HelloWorldDemo\4. Run Vector Searches.sql" />
+    <Build Include="HelloWorldDemo\5. Cleanup.sql" />
+    <Build Include="HelloWorldDemo\6. Drop Database.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ProjectToAzureSqlDb.scmp" />

@@ -67,10 +67,10 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 					[
 						new Embedding
 						{
-							Path = "/vectors",                          // property path to generated vector array
-							DataType = VectorDataType.Float32,          // highest precision values
-							DistanceFunction = DistanceFunction.Cosine, // calculates the similarity between two vector arrays
-							Dimensions = 3072                           // vector array size (must match the embeddings model; start with 256, increase for greater accuracy)
+							Path = "/vector",							// property path to vector array of floating point values
+							DataType = VectorDataType.Float32,          // highest precision vector values
+							DistanceFunction = DistanceFunction.Cosine, // calculates the cosine distance metric between two vector arrays
+							Dimensions = 3072                           // vector array size (must match the actual dimensions stored in the property, or the vector index will be bypassed)
 						}
 					])
 				),
@@ -85,14 +85,14 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 					ExcludedPaths =
 					{
 						new ExcludedPath { Path = "/_etag/?" },
-						new ExcludedPath { Path = "/vectors/*" },	// not strictly necessary; paths defined in the vector embedding policy are excluded automatically
+						new ExcludedPath { Path = "/vector/*" },	// not strictly necessary; paths defined in the vector embedding policy are excluded automatically
 					},
 					VectorIndexes =
 					[
 						new VectorIndexPath
 						{
-							Path = "/vectors",              // property path to generated vector array
-							Type = VectorIndexType.DiskANN  // use DiskANN (Disk-based Approximate Near Neighbor) algorithm
+							Path = "/vector",				// property path to generated vector array
+							Type = VectorIndexType.DiskANN  // use DiskANN (Disk-based Approximate Near Neighbor) index type
 						}
 					]
 				}

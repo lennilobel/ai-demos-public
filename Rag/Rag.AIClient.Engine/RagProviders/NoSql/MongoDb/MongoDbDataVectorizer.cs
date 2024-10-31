@@ -78,10 +78,10 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 		{
 			ConsoleOutput.Write("Generating embeddings... ", ConsoleColor.Green);
 
-			// Strip any previous vectors from each document
+			// Strip any previous vector from each document
 			foreach (var document in documents)
 			{
-				document.Remove("vectors");
+				document.Remove("vector");
 			}
 
 			// Generate embeddings based on the JSON string content of each document
@@ -104,13 +104,13 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 
 			var bulkOperations = new List<WriteModel<BsonDocument>>();
 
-			// Set the vectors property of each document from the generated embeddings
+			// Set the vector property of each document from the generated embeddings
 			for (var i = 0; i < documents.Length; i++)
 			{
 				var document = documents[i];
 				var embeddingsArray = embeddings[i].Embedding.ToArray();
-				var vectors = new BsonArray(embeddingsArray);
-				document["vectors"] = vectors;
+				var vector = new BsonArray(embeddingsArray);
+				document["vector"] = vector;
 
 				var idFilter = Builders<BsonDocument>.Filter.Eq("_id", document["_id"]);
 				var replaceOne = new ReplaceOneModel<BsonDocument>(idFilter, document);
