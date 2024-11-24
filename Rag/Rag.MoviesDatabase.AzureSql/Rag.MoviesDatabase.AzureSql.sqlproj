@@ -153,12 +153,12 @@
     <Build Include="Tables\AppConfig.sql" />
     <Build Include="Stored Procedures\LoadConfig.sql" />
     <Build Include="Stored Procedures\VectorizeMoviesBatch.sql" />
-    <Build Include="HelloWorldDemo\1. Create Database.sql" />
-    <Build Include="HelloWorldDemo\2. Setup.sql" />
-    <Build Include="HelloWorldDemo\3. Vectorize Data.sql" />
-    <Build Include="HelloWorldDemo\4. Run Vector Searches.sql" />
-    <Build Include="HelloWorldDemo\5. Cleanup.sql" />
-    <Build Include="HelloWorldDemo\6. Drop Database.sql" />
+    <None Include="HelloWorldDemo\1. Create Database.sql" />
+    <None Include="HelloWorldDemo\2. Setup.sql" />
+    <None Include="HelloWorldDemo\3. Vectorize Data.sql" />
+    <None Include="HelloWorldDemo\4. Run Vector Searches.sql" />
+    <None Include="HelloWorldDemo\5. Cleanup.sql" />
+    <None Include="HelloWorldDemo\6. Drop Database.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ProjectToAzureSqlDb.scmp" />

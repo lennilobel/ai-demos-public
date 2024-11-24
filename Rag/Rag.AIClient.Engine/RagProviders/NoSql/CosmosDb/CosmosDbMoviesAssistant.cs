@@ -68,8 +68,8 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 					var counter = 0;
 					foreach (var result in results)
 					{
-						ConsoleOutput.WriteLine($"{++counter}. {result["Title"]}", ConsoleColor.Green);
-						ConsoleOutput.WriteLine(JsonConvert.SerializeObject(result));
+						ConsoleOutput.WriteLine($"{++counter}. {result["title"]}", ConsoleColor.Green);
+						ConsoleOutput.WriteLine(JsonConvert.SerializeObject(result), ConsoleColor.DarkGreen);
 					}
 				}
 

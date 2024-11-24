@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace Rag.AIClient.Engine.RagProviders.Sql
 {
-	public class SqlServerDataPopulator : DataPopulatorBase
+	public class SqlServer2022DataPopulator : DataPopulatorBase
 	{
-		public SqlServerDataPopulator(IRagProvider ragProvider)
+		public SqlServer2022DataPopulator(IRagProvider ragProvider)
 			: base(ragProvider)
 		{
 		}

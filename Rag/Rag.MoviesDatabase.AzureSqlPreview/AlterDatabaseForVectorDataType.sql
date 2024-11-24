@@ -7,7 +7,7 @@ GO
 
 ALTER PROCEDURE VectorizeText
 	@Text varchar(max),
-	@Vector vector(1536) OUTPUT	-- *EAP*
+	@Vector vector(1536) OUTPUT	-- *Preview*
 AS
 BEGIN
 
@@ -73,7 +73,7 @@ BEGIN
 		DECLARE @Message varchar(max) = CONCAT('Vectorizing movie ID ', @MovieId, ' - ', @Title)
 		RAISERROR(@Message, 0, 1) WITH NOWAIT
 
-		DECLARE @MovieVector vector(1536)	-- *EAP*
+		DECLARE @MovieVector vector(1536)	-- *Preview*
 
 		BEGIN TRY
 
@@ -112,7 +112,7 @@ END
 GO
 
 ALTER PROCEDURE RunVectorSearch
-	@Vector vector(1536)	-- *EAP*
+	@Vector vector(1536)	-- *Preview*
 AS
 BEGIN
 
@@ -144,7 +144,7 @@ ALTER PROCEDURE AskQuestion
 AS
 BEGIN
 
-	DECLARE @Vector vector(1536)	-- *EAP*
+	DECLARE @Vector vector(1536)	-- *Preview*
 
 	EXEC VectorizeText @Question, @Vector OUTPUT
 

@@ -4,7 +4,7 @@
   <SourceModelProvider>
     <ProjectBasedModelProvider>
       <ProjectGuid>{c4d8cb4c-382d-40e6-808a-e43183cb113f}</ProjectGuid>
-      <Name>Rag.MoviesDatabase.AzureSqlEap</Name>
+      <Name>Rag.MoviesDatabase.AzureSqlPreview</Name>
     </ProjectBasedModelProvider>
   </SourceModelProvider>
   <TargetModelProvider>
@@ -305,6 +305,10 @@
         <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
+        <Name>PerformIndexOperationsOnline</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
         <Name>RebuildIndexesOfflineForDataPhase</Name>
         <Value>False</Value>
       </PropertyElementName>
@@ -342,11 +346,11 @@
       </PropertyElementName>
       <PropertyElementName>
         <Name>TargetDatabaseName</Name>
-        <Value>rag-demo-eap-3l</Value>
+        <Value>rag-demo-preview-3l</Value>
       </PropertyElementName>
       <PropertyElementName>
         <Name>TargetConnectionString</Name>
-        <Value>Data Source=lennidemo.database.windows.net;Initial Catalog=rag-demo-eap-3l;Persist Security Info=True;User ID=saz;Pooling=False;Multiple Active Result Sets=False;Connect Timeout=60;Encrypt=False;Trust Server Certificate=False;Application Name="Microsoft SQL Server Data Tools, Schema Compare";Command Timeout=0</Value>
+        <Value>Data Source=lennidemo.database.windows.net;Initial Catalog=rag-demo-preview-3l;Persist Security Info=True;User ID=saz;Pooling=False;Multiple Active Result Sets=False;Connect Timeout=60;Encrypt=False;Trust Server Certificate=False;Application Name="Microsoft SQL Server Data Tools, Schema Compare";Command Timeout=0</Value>
       </PropertyElementName>
       <PropertyElementName>
         <Name>TreatVerificationErrorsAsWarnings</Name>

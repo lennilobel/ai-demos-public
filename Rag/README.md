@@ -3,7 +3,7 @@
 This is a provider-based RAG solution that leverages Azure OpenAI and supports the following back-end database platforms:
 - SQL Server 2022
 - Azure SQL Database
-- Azure SQL Database (EAP)
+- Azure SQL Database (Preview) / SQL Server 2025 (EAP)
 - Azure Cosmos DB for NoSQL
 - Azure Cosmos DB for MongoDB vCore
 
@@ -38,11 +38,11 @@ Common functionality is implemented in a set of shared base classes, while indiv
 - Vector searching is performed using a simple cosine distance algorithm.
 - The client application is responsible for coordinating vectorization with new movies as they are added/updated.
 
-**Azure SQL Database (EAP)**
+**Azure SQL Database (Preview) / SQL Server 2025 (EAP)**
 
-- Azure SQL Database loads the initial data by shredding a JSON file from Azure Blob Storage into relational tables.
-- Azure SQL Database calls OpenAI (via sp_invoke_external_rest_endpoint) to vectorize movies in the database and natural language questions posed by users.
-- Movie vectors are efficiently stored and indexed in a native vector data type column in the Movie table.
+- Azure SQL Database (Preview) / SQL Server 2025 (EAP) loads the initial data by shredding a JSON file from Azure Blob Storage into relational tables.
+- Azure SQL Database (Preview) / SQL Server 2025 (EAP) calls OpenAI (via sp_invoke_external_rest_endpoint) to vectorize movies in the database and natural language questions posed by users.
+- Movie vectors are stored in a native vector data type column in the Movie table, and efficiently indexed using the DiskANN (Disk-based Approximate Nearest Neighbor) algorithm.
 - Vector searching is performed using the VECTOR_DISTANCE function.
 - The client application is responsible for coordinating vectorization with new movies as they are added/updated.
 
@@ -175,9 +175,9 @@ To use the RAG solution with Azure SQL Database, you'll need to first save the J
   }
   ```
 
-### Azure SQL Database (Early Adopter Program)
+### Azure SQL Database (Preview) / SQL Server 2025 (EAP)
 
-To use the RAG solution with Azure SQL Database (EAP), follow the steps in the previous section for Azure SQL Database, but with the **Rag.MoviesDatabase.AzureSqlEap** project and the **AzureSqlEap** section in **appsettings.json**.
+To use the RAG solution with Azure SQL Database (Preview) / SQL Server 2025 (EAP), follow the steps in the previous section for Azure SQL Database, but with the **Rag.MoviesDatabase.AzureSqlPreview** project and the **AzureSqlPreview** section in **appsettings.json**.
 
 ### Azure Cosmos DB for NoSQL
 

@@ -13,7 +13,7 @@ namespace Rag.AIClient.Engine.Config
 
 		public SqlConfig SqlServer { get; set; }
         public SqlConfig AzureSql { get; set; }
-		public SqlConfig AzureSqlEap { get; set; }
+		public SqlConfig AzureSqlPreview { get; set; }
 		public class SqlConfig
 		{
 			public string ServerName { get; set; }
@@ -55,7 +55,7 @@ namespace Rag.AIClient.Engine.Config
 			public string ExternalRagProviderClassName { get; set; }
 			public SqlConfig SqlServer { get; set; }
 			public SqlConfig AzureSql { get; set; }
-			public SqlConfig AzureSqlEap { get; set; }
+			public SqlConfig AzureSqlPreview { get; set; }
 			public CosmosDbConfig CosmosDb { get; set; }
 			public MongoDbConfig MongoDb { get; set; }
 		}

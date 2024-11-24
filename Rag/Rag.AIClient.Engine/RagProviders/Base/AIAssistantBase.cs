@@ -353,8 +353,8 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 				return;
 			}
 
-			ConsoleOutput.WriteHeading("Prompt Message", ConsoleColor.Magenta);
-			ConsoleOutput.WriteLine(text, ConsoleColor.Magenta);
+			ConsoleOutput.WriteHeading("Prompt Message", ConsoleColor.Green);
+			ConsoleOutput.WriteLine(text, ConsoleColor.Green);
 		}
 
 		private void ConsoleWriteAssistantResponse(string text)

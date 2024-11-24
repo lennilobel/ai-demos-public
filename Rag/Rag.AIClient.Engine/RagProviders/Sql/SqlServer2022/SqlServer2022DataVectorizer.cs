@@ -12,9 +12,9 @@ using System.Threading.Tasks;
 
 namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 {
-	public class SqlServerDataVectorizer : DataVectorizerBase
+	public class SqlServer2022DataVectorizer : DataVectorizerBase
 	{
-		public SqlServerDataVectorizer(IRagProvider ragProvider)
+		public SqlServer2022DataVectorizer(IRagProvider ragProvider)
 			: base(ragProvider)
 		{
 		}

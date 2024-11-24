@@ -30,9 +30,9 @@ namespace Rag.AIClient.Engine.RagProviders
 		public static IRagProvider GetRagProvider() =>
 			RagProviderType switch
 			{
-				RagProviderType.SqlServer => new SqlServerRagProvider(),
+				RagProviderType.SqlServer2022 => new SqlServer2022RagProvider(),
 				RagProviderType.AzureSql => new AzureSqlRagProvider(),
-				RagProviderType.AzureSqlEap => new AzureSqlEapRagProvider(),
+				RagProviderType.AzureSqlPreview => new AzureSqlPreviewRagProvider(),
 				RagProviderType.CosmosDb => new CosmosDbRagProvider(),
 				RagProviderType.MongoDb => new MongoDbRagProvider(),
 				RagProviderType.External => GetExternalRagProvider(),

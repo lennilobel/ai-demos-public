@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 {
-	public class SqlServerMoviesAssistant : MoviesAssistantBase
+	public class SqlServer2022MoviesAssistant : MoviesAssistantBase
     {
-		public SqlServerMoviesAssistant(IRagProvider ragProvider)
+		public SqlServer2022MoviesAssistant(IRagProvider ragProvider)
 			: base(ragProvider)
 		{
 		}

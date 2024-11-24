@@ -13,8 +13,6 @@ namespace Rag.AIClient
 	{
 		public async Task RunDemo()
 		{
-			Debugger.Break();
-
 			await TextEmbeddingsDemo();
 			await CompletionsDemo();
 		}
@@ -25,6 +23,8 @@ namespace Rag.AIClient
 		{
 			public string Title { get; set; }
 			public float[] Vector { get; set; }
+
+			public override string ToString() => $"{this.Title} ({(this.Vector?.Length > 0 ? $"vector[{this.Vector.Length}]" : "no vector")})";
 		}
 
 		private readonly Movie[] _movies =
@@ -77,6 +77,8 @@ namespace Rag.AIClient
 
 		private async Task TextEmbeddingsDemo()
 		{
+			Debugger.Break();
+
 			ConsoleOutput.WriteHeading("Text Embeddings", ConsoleColor.Cyan);
 
 			// Vectorize the movies
@@ -142,8 +144,8 @@ namespace Rag.AIClient
 						.Zip(m.Vector, (qv, mv) => qv * mv)		// Pair up the query vector with the movie's vector and compute the product
 						.Sum()									// Sum the products to calculate a Dot Product similarity score
 				})
-				.OrderByDescending(r => r.Distance)				// Sort results by Dot Product similarity in descending order
-				.Select(r => r.Movie)							// Select the movie with the highest similarity score
+				.OrderByDescending(r => r.Distance)				// Sort results by Dot Product distance score in descending order
+				.Select(r => r.Movie)							// Select the movie as the query result
 				.First();										// Return the first (most similar) movie
 
 			// Return the movie that best matches the query vector
@@ -156,6 +158,8 @@ namespace Rag.AIClient
 
 		private async Task CompletionsDemo()
 		{
+			Debugger.Break();
+
 			ConsoleOutput.WriteHeading("Completions", ConsoleColor.Cyan);
 
 			// Load configuration settings from appsettings.json
@@ -182,7 +186,7 @@ namespace Rag.AIClient
 			await this.AskAndAnswer(openAIClient, completionOptions, "Provide a summary of these movies: Return of the Jedi, The Godfather, Animal House, The Two Towers.");
 			await this.AskAndAnswer(openAIClient, completionOptions, "Only show the movie titles.");
 			await this.AskAndAnswer(openAIClient, completionOptions, "Go back to showing full descriptions. Also, include additional movies that I might like.");
-			await this.AskAndAnswer(openAIClient, completionOptions, "Go back to showing a summary of just the movies I asked about, with no additional recommendations, translated to Dutch.");
+			await this.AskAndAnswer(openAIClient, completionOptions, "Go back to showing a summary of just the movies I asked about, with no additional recommendations, translated to Spanish.");
 		}
 
 		private async Task AskAndAnswer(OpenAIClient openAIClient, ChatCompletionsOptions completionOptions, string question)

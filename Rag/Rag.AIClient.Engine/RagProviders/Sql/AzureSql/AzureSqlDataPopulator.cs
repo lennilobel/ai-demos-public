@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Rag.AIClient.Engine.RagProviders.Sql
 {
-	public class AzureSqlDataPopulator : SqlServerDataPopulator
+	public class AzureSqlDataPopulator : SqlServer2022DataPopulator
 	{
 		public AzureSqlDataPopulator(IRagProvider ragProvider)
 			: base(ragProvider)

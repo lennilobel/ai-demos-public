@@ -231,17 +231,17 @@ namespace Rag.AIClient
 		{
 			var started = DateTime.Now;
 
-			await InitializeAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbedding3Large);
-			await InitializeAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbedding3Small);
-			await InitializeAndVectorize(RagProviderType.SqlServer, EmbeddingModelType.TextEmbeddingAda002);
+			await InitializeAndVectorize(RagProviderType.SqlServer2022, EmbeddingModelType.TextEmbedding3Large);
+			await InitializeAndVectorize(RagProviderType.SqlServer2022, EmbeddingModelType.TextEmbedding3Small);
+			await InitializeAndVectorize(RagProviderType.SqlServer2022, EmbeddingModelType.TextEmbeddingAda002);
 
 			await InitializeAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbedding3Large);
 			await InitializeAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbedding3Small);
 			await InitializeAndVectorize(RagProviderType.AzureSql, EmbeddingModelType.TextEmbeddingAda002);
 
-			//await InitializeAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbedding3Large);	// EAP doesn't support large
-			await InitializeAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbedding3Small);
-			await InitializeAndVectorize(RagProviderType.AzureSqlEap, EmbeddingModelType.TextEmbeddingAda002);
+			//await InitializeAndVectorize(RagProviderType.AzureSqlPreview, EmbeddingModelType.TextEmbedding3Large);
+			await InitializeAndVectorize(RagProviderType.AzureSqlPreview, EmbeddingModelType.TextEmbedding3Small);
+			await InitializeAndVectorize(RagProviderType.AzureSqlPreview, EmbeddingModelType.TextEmbeddingAda002);
 
 			await InitializeAndVectorize(RagProviderType.CosmosDb, EmbeddingModelType.TextEmbedding3Large);
 			await InitializeAndVectorize(RagProviderType.CosmosDb, EmbeddingModelType.TextEmbedding3Small);
