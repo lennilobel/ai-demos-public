@@ -33,8 +33,6 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 		{
 			var started = DateTime.Now;
 
-			base.ConsoleWriteWaitingFor("Running vector search");
-
 			var database = Shared.CosmosClient.GetDatabase(base.RagProvider.DatabaseName);
 			var container = database.GetContainer(this.CosmosDbConfig.ContainerName);
 

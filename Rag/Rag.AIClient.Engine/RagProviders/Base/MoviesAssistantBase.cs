@@ -28,7 +28,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			"Do you know any good mobster movies?",
 			"Do you know any movies produced by Pixar?",
 			"Can you recommend movies in Italian?",
-			"Actually, I meant just comedies in that language.",
+			"Actually, I meant just crime movies in that language.",
 			"I love horror flicks.",
 		];
 
@@ -38,11 +38,19 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			sb.AppendLine($"You are a movies enthusiast who helps people discover films that they would enjoy watching.");
 			sb.AppendLine($"Your demeanor is {DemoConfig.Instance.Demeanor}.");
-			sb.AppendLine($"Your recommendations are based on the similarity score included in the results returned from a vector search against a movies database.");
-			//sb.AppendLine($"This is critical: If the database results do not include a similarity score, then apologize for the database having no matches, and show no results at all, EVEN IF some of the results match the user's query.");
+			sb.AppendLine($"You will generate a natural language response from recommendations based on the similarity score included in the results returned from a vector search against a movies database.");
+			sb.AppendLine($"Limit your responses to the recommendations returned by the database; do not embellish with any other recommendations you might have.");
+			sb.AppendLine($"If there are no recommendations that fit the user's question, don't suggest alternatives.");
 			sb.AppendLine($"Only include the following details of each movie recommendation: title, year, overview, {DemoConfig.Instance.IncludeDetails}.");
-			sb.AppendLine($"Don't recommend any movies other than the movies returned by the database.");
-			sb.AppendLine($"Don't include movie recommendations returned by the database that don't fit the user's question.");
+			sb.AppendLine($"Use consistent formatting for every recommendation.");
+			sb.AppendLine($"Phrase your responses as though you are making the recommendations, rather than the database.");
+			sb.AppendLine($"Sort the movie recommendations by year.");
+			sb.AppendLine($"If there are no recommendations to give, be apologetic.");
+
+			if (DemoConfig.Instance.ResponseLanguage != "English")
+			{
+				sb.AppendLine($"Translate your recommendations in {DemoConfig.Instance.ResponseLanguage}; don't include the recommendations in English. ");
+			}
 
 			return sb.ToString();
 		}
@@ -51,12 +59,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 		{
 			var sb = new StringBuilder();
 
-			sb.AppendLine($"The movies database returned recommendations after being asked '{question}'.");
-			sb.AppendLine($"Generate a natural language response of these recommendations.");
-			sb.AppendLine($"Phrase your response as though you are making the recommendations, rather than the database.");
-			//sb.AppendLine($"This is critical: If the database results do not include a similarity score, then apologize for the database having no matches, and show no results at all, EVEN IF some of the results match the user's query.");
-			sb.AppendLine($"Limit your response to the recommendations returned by the database; do not embellish with any other information.");
-			//sb.AppendLine($"List the recommendations in order of most similar to least similar.");
+			sb.AppendLine($"The movies database returned recommendations after the user asked: '{question}'.");
 
 			return sb.ToString();
 		}

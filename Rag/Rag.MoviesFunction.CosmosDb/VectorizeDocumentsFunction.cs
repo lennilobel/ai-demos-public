@@ -145,7 +145,7 @@ namespace Rag.MoviesFunction.CosmosDb
 
 			for (var i = 0; i < documents.Length; i++)
 			{
-				var vector = JArray.FromObject(embeddings[i].ToFloats());
+				var vector = JArray.FromObject(embeddings[i].ToFloats().ToArray());
 				documents[i]["vector"] = vector;
 			}
 

@@ -17,8 +17,42 @@ namespace Rag.AIClient
 	{
 		public async Task RunDemo()
 		{
-			await TextEmbeddingsDemo();
-			await CompletionsDemo();
+			await GillDemo1();
+			await GillDemo2();
+			//await TextEmbeddingsDemo();
+			//await CompletionsDemo();
+		}
+
+		private async Task GillDemo1()
+		{ 
+			Debugger.Break();
+
+			var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+			var openAIClient = new AzureOpenAIClient(new Uri(config["AppConfig:OpenAI:Endpoint"]), new AzureKeyCredential(config["AppConfig:OpenAI:ApiKey"]));
+			var chatClient = openAIClient.GetChatClient("lenni-gpt-4o");
+
+			var completion = (await chatClient.CompleteChatAsync("Say 'Hello AI world.' 20 times")).Value;
+
+			Console.WriteLine(completion.Content[0].Text);
+		}
+
+		private async Task GillDemo2()
+		{
+			Debugger.Break();
+
+			var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+			var openAIClient = new AzureOpenAIClient(new Uri(config["AppConfig:OpenAI:Endpoint"]), new AzureKeyCredential(config["AppConfig:OpenAI:ApiKey"]));
+			var chatClient = openAIClient.GetChatClient("lenni-gpt-4o");
+
+			var completionUpdates = chatClient.CompleteChatStreamingAsync("Say 'Hello AI world.' 20 times");
+
+			await foreach (var completionUpdate in completionUpdates)
+			{
+				foreach (var contentPart in completionUpdate.ContentUpdate)
+				{
+					Console.Write(contentPart.Text);
+				}
+			}
 		}
 
 		#region Text embeddings demo

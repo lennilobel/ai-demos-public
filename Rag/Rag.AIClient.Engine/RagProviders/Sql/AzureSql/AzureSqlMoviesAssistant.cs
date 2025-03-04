@@ -28,8 +28,6 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.AzureSql
 		{
 			var started = DateTime.Now;
 
-			base.ConsoleWriteWaitingFor("Running vector search");
-
 			var results = new List<JObject>();
 
 			var counter = 0;

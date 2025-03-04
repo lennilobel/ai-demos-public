@@ -31,8 +31,6 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
         {
             var started = DateTime.Now;
 
-            base.ConsoleWriteWaitingFor("Running vector search");
-
             var vectorTable = new DataTable();
             vectorTable.Columns.Add("VectorValueId", typeof(int));
             vectorTable.Columns.Add("VectorValue", typeof(float));

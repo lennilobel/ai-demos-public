@@ -1,3 +1,4 @@
+using MongoDB.Driver;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenAI.Chat;
@@ -92,21 +93,6 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			var sb = new StringBuilder();
 			sb.Append(this.BuildChatSystemPrompt());
 
-			if (DemoConfig.Instance.NoEmojis)
-			{
-				sb.AppendLine("Don't include emojis, because they won't render in my demo console application.");
-			}
-
-			if (DemoConfig.Instance.NoMarkdown)
-			{
-				sb.AppendLine("Don't include markdown syntax, because it won't render in my demo console application.");
-			}
-
-			if (DemoConfig.Instance.ResponseLanguage != "English")
-			{
-				sb.AppendLine($"Translate your recommendations in {DemoConfig.Instance.ResponseLanguage}; don't include the recommendations in English. ");
-			}
-
 			var systemPrompt = sb.ToString();
 
 			this.ConsoleWritePromptMessage(systemPrompt);
@@ -163,9 +149,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			var autoQuestion = this.Questions[_currentQuestionIndex++];
 
-			this.ConsoleWriteStreamedLine($"> {autoQuestion} ", ConsoleColor.Yellow, streamChunkSize: 1, suppressLineFeed: true);
-			Thread.Sleep(500);
-			ConsoleOutput.WriteLine();
+			this.ConsoleWriteQuestion($"> {autoQuestion} ");
 
 			return autoQuestion;
 		}
@@ -176,9 +160,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			var results = await this.GetDatabaseResults(question);
 
 			// Generate a natural language response (Completions API using a GPT model)
-			var answer = await this.GenerateAnswer(question, results, completionOptions, conversation);
-
-			this.ConsoleWriteAssistantResponse(answer);
+			await this.GenerateAnswer(question, results, completionOptions, conversation);
 
 			if (DemoConfig.Instance.GeneratePosterImage)
 			{
@@ -200,8 +182,6 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 		protected async Task<float[]> VectorizeQuestion(string question)
 		{
 			var started = DateTime.Now;
-
-			this.ConsoleWriteWaitingFor("Vectorizing question");
 
 			var vector = default(float[]);
 			try
@@ -234,8 +214,6 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			var started = DateTime.Now;
 
-			this.ConsoleWriteWaitingFor("Generating response");
-
 			var sb = new StringBuilder();
 			sb.Append(this.BuildChatResponse(question));
 			sb.AppendLine();
@@ -262,9 +240,41 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			conversation.Add(new UserChatMessage(userPrompt));
 
+			if (DemoConfig.Instance.ShowInternalOperations)
+			{
+				ConsoleOutput.WriteHeading("Conversation History", ConsoleColor.Green);
+				var maxWidth = Math.Max(0, Console.WindowWidth - 10);
+				var counter = 0;
+				foreach (var message in conversation)
+				{
+					ConsoleOutput.WriteLine($" {++counter}) {message.GetType().Name}", ConsoleColor.Green);
+					ConsoleOutput.WriteLine($"     {message.Content.First().Text.Replace('\r', ' ').Replace('\n', ' ').Replace('\t', ' ').Substring(0, maxWidth)}...", ConsoleColor.Green);
+					Console.WriteLine();
+				}
+
+				Console.WriteLine();
+			}
+
 			var chatClient = Shared.AzureOpenAIClient.GetChatClient(Shared.AppConfig.OpenAI.CompletionDeploymentName);
-			var completion = (await chatClient.CompleteChatAsync(conversation, completionOptions)).Value;
-			var answer = completion.Content[0].Text;
+			var completionUpdates = chatClient.CompleteChatStreamingAsync(conversation);
+
+			ConsoleOutput.WriteHeading("Assistant Response", ConsoleColor.Cyan);
+
+			sb = new StringBuilder();
+			Console.ForegroundColor = ConsoleColor.Cyan;
+			await foreach (var completionUpdate in completionUpdates)
+			{
+				foreach (var contentPart in completionUpdate.ContentUpdate)
+				{
+					Console.Write(contentPart.Text);
+					sb.Append(contentPart.Text);
+				}
+			}
+			Console.WriteLine();
+			Console.ResetColor();
+			var answer = sb.ToString();
+
+			conversation.Add(new AssistantChatMessage(answer));
 
 			this._elapsedGenerateAnswer = DateTime.Now.Subtract(started);
 
@@ -323,7 +333,9 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 				this.ConsoleWritePromptMessage($"Input prompt revised to:\n{generatedImage.RevisedPrompt}");
 			}
 
-			this.ConsoleWriteAssistantResponse($"Generated image is ready at:\n{generatedImage.ImageUri.AbsoluteUri}");
+			ConsoleOutput.WriteHeading("Image Generation Response", ConsoleColor.Cyan);
+			ConsoleOutput.WriteLine($"Generated image is ready at:\n{generatedImage.ImageUri.AbsoluteUri}", ConsoleColor.Cyan);
+
 			this.OpenBrowser(generatedImage.ImageUri.AbsoluteUri);
 		}
 
@@ -359,54 +371,18 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			ConsoleOutput.WriteLine(text, ConsoleColor.Green);
 		}
 
-		private void ConsoleWriteAssistantResponse(string text)
+		private void ConsoleWriteQuestion(string text)
 		{
-			if (!DemoConfig.Instance.ShowInternalOperations)
+			Console.ForegroundColor = ConsoleColor.Yellow;
+
+			for (var i = 0; i < text.Length; i += 1)
 			{
-				this.ConsoleClearLine();
-			}
-
-			ConsoleOutput.WriteHeading("Assistant Response", ConsoleColor.Cyan);
-			this.ConsoleWriteStreamedLine(text, ConsoleColor.Cyan, streamChunkSize: 10);
-		}
-
-		protected void ConsoleWriteWaitingFor(string text)
-		{
-			if (DemoConfig.Instance.ShowInternalOperations)
-			{
-				return;
-			}
-
-			Console.ForegroundColor = ConsoleColor.Gray;
-			Console.Write($"   {text}...");
-			Console.ResetColor();
-		}
-
-		private void ConsoleWriteStreamedLine(string text, ConsoleColor color = ConsoleColor.Gray, int? streamChunkSize = null, bool suppressLineFeed = false)
-		{
-			//streamChunkSize = null;	// uncomment this line to disable the streamed output effect
-			Console.ForegroundColor = color;
-
-			if (streamChunkSize != null && this._streamOutput && text != null)
-			{
-				for (var i = 0; i < text.Length; i += streamChunkSize.Value)
-				{
-					var chunk = text.Substring(i, Math.Min(streamChunkSize.Value, text.Length - i));
-					Console.Write(chunk);
-					Thread.Sleep(1);
-				}
-			}
-			else
-			{
-				Console.Write(text);
-			}
-
-			if (!suppressLineFeed)
-			{
-				Console.Write(Environment.NewLine);
+				Console.Write(text[i]);
+				Thread.Sleep(1);
 			}
 
 			Console.ResetColor();
+			ConsoleOutput.WriteLine();
 		}
 
 		private void ConsoleClearLine()

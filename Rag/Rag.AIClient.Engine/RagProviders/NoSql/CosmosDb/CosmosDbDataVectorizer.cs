@@ -105,7 +105,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
             // Set the vector property of each document from the generated embeddings
             for (var i = 0; i < documents.Length; i++)
             {
-                var vector = JArray.FromObject(embeddings[i].ToFloats());
+                var vector = JArray.FromObject(embeddings[i].ToFloats().ToArray());
                 documents[i]["vector"] = vector;
             }
 
