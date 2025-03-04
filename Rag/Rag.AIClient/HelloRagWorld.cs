@@ -1,8 +1,6 @@
 using Azure;
 using Azure.AI.OpenAI;
-using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
-using Microsoft.VisualBasic;
 using OpenAI.Chat;
 using Rag.AIClient.Engine;
 using System;
@@ -17,42 +15,8 @@ namespace Rag.AIClient
 	{
 		public async Task RunDemo()
 		{
-			await GillDemo1();
-			await GillDemo2();
-			//await TextEmbeddingsDemo();
-			//await CompletionsDemo();
-		}
-
-		private async Task GillDemo1()
-		{ 
-			Debugger.Break();
-
-			var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-			var openAIClient = new AzureOpenAIClient(new Uri(config["AppConfig:OpenAI:Endpoint"]), new AzureKeyCredential(config["AppConfig:OpenAI:ApiKey"]));
-			var chatClient = openAIClient.GetChatClient("lenni-gpt-4o");
-
-			var completion = (await chatClient.CompleteChatAsync("Say 'Hello AI world.' 20 times")).Value;
-
-			Console.WriteLine(completion.Content[0].Text);
-		}
-
-		private async Task GillDemo2()
-		{
-			Debugger.Break();
-
-			var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-			var openAIClient = new AzureOpenAIClient(new Uri(config["AppConfig:OpenAI:Endpoint"]), new AzureKeyCredential(config["AppConfig:OpenAI:ApiKey"]));
-			var chatClient = openAIClient.GetChatClient("lenni-gpt-4o");
-
-			var completionUpdates = chatClient.CompleteChatStreamingAsync("Say 'Hello AI world.' 20 times");
-
-			await foreach (var completionUpdate in completionUpdates)
-			{
-				foreach (var contentPart in completionUpdate.ContentUpdate)
-				{
-					Console.Write(contentPart.Text);
-				}
-			}
+			await TextEmbeddingsDemo();
+			await CompletionsDemo();
 		}
 
 		#region Text embeddings demo
@@ -228,16 +192,20 @@ namespace Rag.AIClient
 			Console.ForegroundColor = ConsoleColor.Yellow;
 			Console.WriteLine(question);
 
-			// Get the chat completion response from OpenAI based on the provided question and options
+			// Stream the chat completion response from OpenAI based on the provided question and options
 			conversation.Add(new UserChatMessage(question));
-			var completion = (await chatClient.CompleteChatAsync(conversation, completionOptions)).Value;
-
-			// Extract the answer from the first choice in the response
-			var answer = completion.Content[0].Text;
+			var completionUpdates = chatClient.CompleteChatStreamingAsync(conversation, completionOptions);
 
 			// Display the answer
 			Console.ForegroundColor = ConsoleColor.Green;
-			Console.WriteLine(answer);
+			await foreach (var completionUpdate in completionUpdates)
+			{
+				foreach (var contentPart in completionUpdate.ContentUpdate)
+				{
+					Console.Write(contentPart.Text);
+				}
+			}
+			Console.WriteLine();
 			Console.WriteLine();
 			Console.ResetColor();
 		}
