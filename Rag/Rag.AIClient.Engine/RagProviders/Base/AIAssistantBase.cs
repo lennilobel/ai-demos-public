@@ -133,10 +133,10 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 					{
 						ConsoleOutput.WriteLine("> ", ConsoleColor.Yellow, suppressLineFeed: true);
 						Console.ForegroundColor = ConsoleColor.Yellow;
-						var question = Console.ReadLine();
-						if (!string.IsNullOrWhiteSpace(question))
+						var manualQuestion = Console.ReadLine();
+						if (!string.IsNullOrWhiteSpace(manualQuestion))
 						{
-							return question;
+							return manualQuestion;
 						}
 					}
 				}
@@ -144,7 +144,8 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			if (this._currentQuestionIndex == Questions.Length)
 			{
-				this._currentQuestionIndex = 0;
+				Console.WriteLine("There are no more auto-questions defined");
+				return null;
 			}
 
 			var autoQuestion = this.Questions[_currentQuestionIndex++];
