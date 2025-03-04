@@ -1,5 +1,5 @@
 CREATE PROCEDURE RunVectorSearch
-	@Vector varbinary(8000)
+	@Vector vector(1536)	-- *Preview*
 AS
 BEGIN
 

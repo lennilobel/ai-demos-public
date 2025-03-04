@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 using System.Threading.Tasks;
 
 namespace Hiker.SemanticKernel

@@ -147,7 +147,6 @@
     <Build Include="Tables\SpokenLanguage.sql" />
     <Build Include="BlobStorage\BlobStorageCredential.sql" />
     <Build Include="Stored Procedures\RunVectorSearch.sql" />
-    <None Include="AlterDatabaseForVectorDataType.sql" />
     <Build Include="Tables\AppConfig.sql" />
     <Build Include="Stored Procedures\LoadConfig.sql" />
     <None Include="PreviewDocs\migrate-to-vector-type.sql" />

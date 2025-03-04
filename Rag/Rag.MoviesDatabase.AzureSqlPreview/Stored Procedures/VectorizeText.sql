@@ -1,6 +1,6 @@
 CREATE PROCEDURE VectorizeText
 	@Text varchar(max),
-	@Vector varbinary(8000) OUTPUT
+	@Vector vector(1536) OUTPUT	-- *Preview*
 AS
 BEGIN
 
@@ -10,7 +10,7 @@ BEGIN
 
 	DECLARE @Url varchar(max) = CONCAT(@OpenAIEndpoint, 'openai/deployments/', @OpenAIDeploymentName, '/embeddings?api-version=2023-03-15-preview')
 	DECLARE @Headers varchar(max) = JSON_OBJECT('api-key': @OpenAIApiKey)
-	DECLARE @Payload varchar(max) = JSON_OBJECT('input': @Text)
+	DECLARE @Payload varchar(max) = JSON_OBJECT('input': @Text, 'dimensions': 1536)
 	DECLARE @Response nvarchar(max)
 	DECLARE @ReturnValue int
 
@@ -26,6 +26,6 @@ BEGIN
 
 	DECLARE @VectorJson nvarchar(max) = JSON_QUERY(@Response, '$.result.data[0].embedding')
 
-	SET @Vector = JSON_ARRAY_TO_VECTOR(@VectorJson)
+	SET @Vector = CONVERT(vector(1536), @VectorJson)
 
 END

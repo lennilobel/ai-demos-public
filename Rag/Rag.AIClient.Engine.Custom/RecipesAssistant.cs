@@ -18,30 +18,37 @@ namespace Rag.AIClient.Engine.Custom
             Console.WriteLine();
         }
 
-        protected override string[] Questions => [
-            "I love Asian food",
-            "I need someting that cooks in less than 15 minutes",
-			"Snacks or desserts",
-			"Pasta dishes",
+		protected override string[] Questions => [
+			"How about some Italian appetizers?",
+			"Show me your pizza recipes",
+			"Pineapple in the ingredients",
+			"Please recommend delicious Italian desserts",
+			"Fresh Mediterranean salad options",
+			"I love chicken, kebab, and falafel",
+			"Got any Asian stir fry recipes?",
+			"Give me some soup choices",
+			"Traditional Korean breakfast",
 		];
 
-        protected override string BuildChatPrompt()
+		protected override string BuildChatSystemPrompt()
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine($"You help people find great recipes. You are upbeat and friendly.");
+			sb.AppendLine($"You are an assistant that helps people find recipes from a database. You are upbeat and friendly.");
 
-            return sb.ToString();
+			return sb.ToString();
         }
 
         protected override string BuildChatResponse(string question)
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine($"The user asked:  '{question}'.");
-            sb.AppendLine($"The database returned the following similarity results from a vector search:");
+			sb.AppendLine($"The user asked the question \"{question}\" and the database returned the recipes below");
+			sb.AppendLine($"Generate a response that starts with a sentence or two related to the user's question,");
+			sb.AppendLine($"followed by each recipe's details. For the details, list the ingredients as a comma-separated");
+			sb.AppendLine($"string, and list the instructions as a numbered list:");
 
-            return sb.ToString();
+			return sb.ToString();
         }
 
         protected override string BuildImageGenerationPrompt()

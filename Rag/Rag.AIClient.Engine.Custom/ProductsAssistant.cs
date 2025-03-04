@@ -24,7 +24,7 @@ namespace Rag.AIClient.Engine.Custom
 			"Executive chair, must ship in less than 2 business days.",
 		];
 
-        protected override string BuildChatPrompt()
+        protected override string BuildChatSystemPrompt()
         {
             var sb = new StringBuilder();
 

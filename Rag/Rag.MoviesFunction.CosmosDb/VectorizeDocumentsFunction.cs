@@ -5,6 +5,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenAI.Embeddings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace Rag.MoviesFunction.CosmosDb
 
 		private static CosmosClient CosmosClient { get; }
 
-		private static OpenAIClient OpenAIClient { get; }
+		private static AzureOpenAIClient OpenAIClient { get; }
 
 		static VectorizeDocumentsFunction()
 		{
@@ -34,7 +35,7 @@ namespace Rag.MoviesFunction.CosmosDb
 
 			var openAIEndpoint = Environment.GetEnvironmentVariable("OpenAIEndpoint");
 			var openAIKey = Environment.GetEnvironmentVariable("OpenAIKey");
-			OpenAIClient = new OpenAIClient(new Uri(openAIEndpoint), new AzureKeyCredential(openAIKey));
+			OpenAIClient = new AzureOpenAIClient(new Uri(openAIEndpoint), new AzureKeyCredential(openAIKey));
 		}
 
 		public VectorizeDocumentsFunction(ILoggerFactory loggerFactory)
@@ -110,7 +111,7 @@ namespace Rag.MoviesFunction.CosmosDb
 			return changedDocuments.ToArray();
 		}
 
-		private async Task<IReadOnlyList<EmbeddingItem>> GenerateEmbeddings(JObject[] documents)
+		private async Task<OpenAIEmbedding[]> GenerateEmbeddings(JObject[] documents)
 		{
 			this._logger.LogInformation($"Generating vector embeddings for {documents.Length} document(s)");
 
@@ -127,19 +128,16 @@ namespace Rag.MoviesFunction.CosmosDb
 				document.Remove("vector");
 			}
 
-			var embeddingsOptions = new EmbeddingsOptions(
-				deploymentName: Environment.GetEnvironmentVariable("OpenAIDeploymentName"),
-				input: documents.Select(JsonConvert.SerializeObject));
-
-			var openAIEmbeddings = await OpenAIClient.GetEmbeddingsAsync(embeddingsOptions);
-			var embeddings = openAIEmbeddings.Value.Data;
+			var input = documents.Select(d => d.ToString()).ToArray();
+			var embeddingClient = OpenAIClient.GetEmbeddingClient(Environment.GetEnvironmentVariable("OpenAIDeploymentName"));
+			var embeddings = (await embeddingClient.GenerateEmbeddingsAsync(input)).Value.ToArray();
 
 			this._logger.LogInformation($"Generated vector embeddings for {documents.Length} document(s)");
 
 			return embeddings;
 		}
 
-		private async Task UpdateDocuments(JObject[] documents, IReadOnlyList<EmbeddingItem> embeddings)
+		private async Task UpdateDocuments(JObject[] documents, OpenAIEmbedding[] embeddings)
 		{
 			this._logger.LogInformation($"Updating {documents.Length} document(s)");
 
@@ -147,9 +145,8 @@ namespace Rag.MoviesFunction.CosmosDb
 
 			for (var i = 0; i < documents.Length; i++)
 			{
-				var vectorArray = embeddings[i].Embedding.ToArray();
-				var vectorJArray = JArray.FromObject(vectorArray);
-				documents[i]["vector"] = vectorJArray;
+				var vector = JArray.FromObject(embeddings[i].ToFloats());
+				documents[i]["vector"] = vector;
 			}
 
 			var tasks = new List<Task>(documents.Length);

@@ -1,6 +1,6 @@
-using Azure.AI.OpenAI;
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json.Linq;
+using OpenAI.Embeddings;
 using Rag.AIClient.Engine.Config;
 using Rag.AIClient.Engine.EmbeddingModels;
 using Rag.AIClient.Engine.RagProviders.Base;
@@ -72,7 +72,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
             ConsoleOutput.WriteLine($"Generated and embedded vectors for {itemCount} document(s) with {this._errorCount} error(s) ({this._ruCost} RUs)", ConsoleColor.Yellow);
         }
 
-        private async Task<IReadOnlyList<EmbeddingItem>> GenerateEmbeddings(JObject[] documents)
+        private async Task<OpenAIEmbedding[]> GenerateEmbeddings(JObject[] documents)
         {
             ConsoleOutput.Write("Generating embeddings... ", ConsoleColor.Green);
 
@@ -88,29 +88,24 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
                 document.Remove("vector");
             }
 
-            // Generate embeddings based on the JSON string content of each document
-            var embeddingsOptions = new EmbeddingsOptions(
-                deploymentName: EmbeddingModelFactory.GetDeploymentName(),
-                input: documents.Select(d => d.ToString())
-            );
+			// Generate embeddings based on the JSON string content of each document
+			var input = documents.Select(d => d.ToString()).ToArray();
+			var embeddingClient = Shared.AzureOpenAIClient.GetEmbeddingClient(EmbeddingModelFactory.GetDeploymentName());
+            var embeddings = (await embeddingClient.GenerateEmbeddingsAsync(input)).Value.ToArray();
 
-            var openAIEmbeddings = await Shared.OpenAIClient.GetEmbeddingsAsync(embeddingsOptions);
-            var embeddings = openAIEmbeddings.Value.Data;
-
-            ConsoleOutput.WriteLine(embeddings.Count, ConsoleColor.Green);
+            ConsoleOutput.WriteLine(embeddings.Length, ConsoleColor.Green);
 
             return embeddings;
         }
 
-        private async Task SaveVectors(Container container, JObject[] documents, IReadOnlyList<EmbeddingItem> embeddings)
+        private async Task SaveVectors(Container container, JObject[] documents, OpenAIEmbedding[] embeddings)
         {
             ConsoleOutput.Write("Saving vectors... ", ConsoleColor.Green);
 
             // Set the vector property of each document from the generated embeddings
             for (var i = 0; i < documents.Length; i++)
             {
-                var embeddingsArray = embeddings[i].Embedding.ToArray();
-                var vector = JArray.FromObject(embeddingsArray);
+                var vector = JArray.FromObject(embeddings[i].ToFloats());
                 documents[i]["vector"] = vector;
             }
 

@@ -9,7 +9,7 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 
         public override string DatabaseName => SqlConfig.DatabaseName + GetDatabaseNameSuffix();
 
-        public override AppConfig.SqlConfig SqlConfig => Shared.AppConfig.SqlServer;
+        public override AppConfig.SqlConfig SqlConfig => Shared.AppConfig.SqlServer2022;
 
 		public override string EntityTitleFieldName => "Title";
 		

@@ -4,7 +4,7 @@
   <SourceModelProvider>
     <ProjectBasedModelProvider>
       <ProjectGuid>{e698a16d-82ed-4e4f-a7ad-ea522074c94e}</ProjectGuid>
-      <Name>Rag.MoviesDatabase.SqlServer</Name>
+      <Name>Rag.MoviesDatabase.SqlServer2022</Name>
     </ProjectBasedModelProvider>
   </SourceModelProvider>
   <TargetModelProvider>
@@ -302,6 +302,10 @@
       </PropertyElementName>
       <PropertyElementName>
         <Name>RegisterDataTierApplication</Name>
+        <Value>False</Value>
+      </PropertyElementName>
+      <PropertyElementName>
+        <Name>PerformIndexOperationsOnline</Name>
         <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>

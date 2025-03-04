@@ -13,7 +13,7 @@ namespace Rag.AIClient.Engine
         public static AppConfig AppConfig { get; set; }
 		public static CosmosClient CosmosClient { get; set; }
 		public static MongoClient MongoClient { get; set; }
-		public static OpenAIClient OpenAIClient { get; set; }
+		public static AzureOpenAIClient AzureOpenAIClient { get; set; }
 
 		public static void Initialize()
 		{
@@ -30,7 +30,7 @@ namespace Rag.AIClient.Engine
 				AppConfig.MongoDb.ConnectionString
 			);
 
-			OpenAIClient = new OpenAIClient(
+			AzureOpenAIClient = new AzureOpenAIClient(
 				new Uri(AppConfig.OpenAI.Endpoint),
 				new AzureKeyCredential(AppConfig.OpenAI.ApiKey)
 			);

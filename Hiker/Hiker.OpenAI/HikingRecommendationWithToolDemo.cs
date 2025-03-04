@@ -4,7 +4,9 @@ using Hiker.Shared;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenAI.Chat;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -25,7 +27,8 @@ namespace Hiker.OpenAI
 
 			var endpoint = new Uri(openAiEndpoint);
 			var credentials = new AzureKeyCredential(openAiKey);
-			var openAIClient = new OpenAIClient(endpoint, credentials);
+			var openAIClient = new AzureOpenAIClient(endpoint, credentials);
+			var chatClient = openAIClient.GetChatClient(openAiGptDeploymentName);
 
 			var getWeatherParameters = new
 			{
@@ -51,31 +54,26 @@ namespace Hiker.OpenAI
 				Required = new[] { "location" },
 			};
 
-			var getWeatherToolDefinition = new ChatCompletionsFunctionToolDefinition()
-			{
-				Name = GetWeatherToolName,
-				Description = "Get the current weather in a given location",
-				Parameters = BinaryData.FromObjectAsJson(getWeatherParameters, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }),
-			};
+			var getWeatherChatTool = ChatTool.CreateFunctionTool(
+				functionName: GetWeatherToolName,
+				functionDescription: "Get the current weather in a given location",
+				functionParameters: BinaryData.FromObjectAsJson(getWeatherParameters, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase })
+			);
 
-			var completionOptions = new ChatCompletionsOptions
+			var completionOptions = new ChatCompletionOptions
 			{
-				MaxTokens = 400,
+				MaxOutputTokenCount = 400,
 				Temperature = 1f,
 				FrequencyPenalty = 0.0f,
 				PresencePenalty = 0.0f,
-				NucleusSamplingFactor = 0.95f, // Top P
-				DeploymentName = openAiGptDeploymentName,
-				Tools = { getWeatherToolDefinition },
-				ToolChoice = ChatCompletionsToolChoice.Auto
+				TopP = 0.95f,
+				Tools = { getWeatherChatTool },
 			};
 
-			var humanMessageText = default(string);
-			var completions = default(ChatCompletions);
-			var aiResponse = default(ChatResponseMessage);
+			var conversation = new List<ChatMessage>();
 
-			// Configure the assistant with a system message
-			humanMessageText = @"
+			// Configure the assistant with a system prompt
+			var systemPrompt = @"
 You are a hiking enthusiast who helps people discover fun hikes in their area. You are upbeat and friendly.
 A good weather is important for a good hike. Only make recommendations if the weather is good or if people insist.
 You introduce yourself when first saying hello. When helping people out, you always ask them 
@@ -87,73 +85,83 @@ for this information to inform the hiking recommendation you provide:
 You will then provide three suggestions for nearby hikes that vary in length after you get that information. 
 You will also share an interesting fact about the local nature on the hikes when making a recommendation.
 			";
-			base.WriteLine(humanMessageText, ConsoleColor.Cyan);
-			completionOptions.Messages.Add(new ChatRequestSystemMessage(humanMessageText));
+			base.WriteLine($"[System]: {systemPrompt}", ConsoleColor.Cyan);
+			conversation.Add(new SystemChatMessage(systemPrompt));
 
 			// Say hello to the assistant
-			humanMessageText = @"
-Hi!
+			var userPrompt = @"
+Hi! 
+Apparently you can help me find a hike that I will like?
 			";
-			base.WriteLine(humanMessageText, ConsoleColor.Yellow);
-			completionOptions.Messages.Add(new ChatRequestUserMessage(humanMessageText));
+			base.WriteLine($"[User]: {userPrompt}", ConsoleColor.Yellow);
+			conversation.Add(new UserChatMessage(userPrompt));
 
 			// Get the response from the assistant with information about how to request a recommendation
-			completions = await openAIClient.GetChatCompletionsAsync(completionOptions);
-			aiResponse = completions.Choices[0].Message;
-			base.WriteLine(aiResponse.Content, ConsoleColor.Green);
-			completionOptions.Messages.Add(new ChatRequestAssistantMessage(aiResponse.Content));
+			var completion = (await chatClient.CompleteChatAsync(conversation, completionOptions)).Value;
+			var completionRole = completion.Role;
+			var completionText = completion.Content[0].Text;
 
-			// Supply the recommendation request to the assistant
-			humanMessageText = @"
+			base.WriteLine($"[{completionRole}]: {completionText}", ConsoleColor.Green);
+
+			conversation.Add(new AssistantChatMessage(completionText));
+
+			// Ask for a hiking recommendation near Seattle, based on the current weather there
+			userPrompt = @"
 Is the weather is good today for a hike?
 If yes, I would like an easy hike near Seattle. I don't mind driving a bit to get there.
 I don't want the hike to be over 10 miles round trip. I'd consider a point-to-point hike.
 I want the hike to be as isolated as possible. I don't want to see many people.
 I would like it to be as bug free as possible.
 			";
-			base.WriteLine(humanMessageText, ConsoleColor.Yellow);
-			completionOptions.Messages.Add(new ChatRequestUserMessage(humanMessageText));
+			base.WriteLine(userPrompt, ConsoleColor.Yellow);
+			conversation.Add(new UserChatMessage(userPrompt));
 
-			// Get the response from the assistant with the recommendation
-			completions = await openAIClient.GetChatCompletionsAsync(completionOptions);
+			//completion = (await chatClient.CompleteChatAsync(conversation, completionOptions)).Value;
 
-			// If the response includes a tool call (e.g., "get weather"), handle it and continue the conversation
-			var completionsChoice = completions.Choices[0];
-			if (completionsChoice.FinishReason == CompletionsFinishReason.ToolCalls)
+			var requestCompletion = true;
+			while (requestCompletion)
 			{
-				// Include the function call message in the conversation history
-				completionOptions.Messages.Add(new ChatRequestAssistantMessage(completionsChoice.Message));
+				// Get the response from the assistant, which will first process the tool call, and then supply a recommendation
+				completion = (await chatClient.CompleteChatAsync(conversation, completionOptions)).Value;
+				conversation.Add(new AssistantChatMessage(completion));
+				completionRole = completion.Role;
 
-				// Handle each tool call that is resolved
-				foreach (var toolCall in completionsChoice.Message.ToolCalls)
+				switch (completion.FinishReason)
 				{
-					var toolCallMessage = await this.GetToolCallResponseMessage(toolCall);
-					completionOptions.Messages.Add(toolCallMessage);
+					// Process tool calls, add the tool call output to the converstaion, and request a new completion
+					case ChatFinishReason.ToolCalls:
+						foreach (var toolCall in completion.ToolCalls)
+						{
+							var chatToolOutput = await this.HandleToolCallAsync(toolCall);
+							conversation.Add(new ToolChatMessage(toolCall.Id, chatToolOutput));
+						}
+
+						break;
+
+					// Show the recommendation and stop requesting additional completions
+					case ChatFinishReason.Stop:
+						completionText = completion.Content[0].Text;
+						base.WriteLine($"[{completionRole}]: {completionText}", ConsoleColor.Green);
+						requestCompletion = false;
+
+						break;
 				}
-
-				// Base the answer on the the tool call results
-				completions = await openAIClient.GetChatCompletionsAsync(completionOptions);
 			}
-
-			aiResponse = completions.Choices[0].Message;
-			base.WriteLine(aiResponse.Content, ConsoleColor.Green);
 		}
 
-		// Handle tool call responses
-		private async Task<ChatRequestToolMessage> GetToolCallResponseMessage(ChatCompletionsToolCall toolCall)
+		private async Task<string> HandleToolCallAsync(ChatToolCall toolCall)
 		{
-			var functionToolCall = toolCall as ChatCompletionsFunctionToolCall;
-			if (functionToolCall?.Name == GetWeatherToolName)
+			if (toolCall.FunctionName == GetWeatherToolName)
 			{
-				return await this.GetWeather(functionToolCall);
+				return await this.GetWeather(toolCall);
 			}
 
-			throw new Exception($"Tool '{functionToolCall?.Name}' is not supported");
+			throw new Exception($"Chat tool function '{toolCall.FunctionName}' is not supported");
 		}
 
-		private async Task<ChatRequestToolMessage> GetWeather(ChatCompletionsFunctionToolCall functionToolCall)
+		private async Task<string> GetWeather(ChatToolCall toolCall)
 		{
-			var functionArguments = JsonConvert.DeserializeObject<JObject>(functionToolCall.Arguments);
+			var functionArguments = JsonConvert.DeserializeObject<JObject>(toolCall.FunctionArguments.ToString());
 
 			var location = functionArguments["location"].Value<string>();
 			var units = functionArguments == null ? "imperial" : functionArguments["units"].Value<string>();
@@ -185,9 +193,9 @@ I would like it to be as bug free as possible.
 			//result = $"Current weather in {location} is heavy rain, 41.76 Fahrenheit, wind speed 40.22 miles per hour";
 			//result = $"Current weather in {location} is clear sky, 85.15 Fahrenheit, wind speed 9.22 miles per hour";
 
-			base.WriteLine(result, ConsoleColor.Gray);
+			base.WriteLine($"[Tool]: {result}", ConsoleColor.Gray);
 
-			return new ChatRequestToolMessage(result, functionToolCall.Id);
+			return result;
 		}
 
 	}

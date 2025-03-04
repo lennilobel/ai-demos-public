@@ -2,7 +2,9 @@ using Azure;
 using Azure.AI.OpenAI;
 using Hiker.Shared;
 using Microsoft.Extensions.Configuration;
+using OpenAI.Chat;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Hiker.OpenAI
@@ -19,24 +21,21 @@ namespace Hiker.OpenAI
 
 			var endpoint = new Uri(openAiEndpoint);
 			var credentials = new AzureKeyCredential(openAiKey);
-			var openAIClient = new OpenAIClient(endpoint, credentials);
+			var openAIClient = new AzureOpenAIClient(endpoint, credentials);
+			var chatClient = openAIClient.GetChatClient(openAiGptDeploymentName);
 
-			var completionOptions = new ChatCompletionsOptions
+			var completionOptions = new ChatCompletionOptions
 			{
-				MaxTokens = 400,
+				MaxOutputTokenCount = 400,
 				Temperature = 1f,
 				FrequencyPenalty = 0.0f,
 				PresencePenalty = 0.0f,
-				NucleusSamplingFactor = 0.95f, // Top P
-				DeploymentName = openAiGptDeploymentName
+				TopP = 0.95f,
 			};
 
-			var humanMessageText = default(string);
-			var completions = default(ChatCompletions);
-			var aiResponse = default(ChatResponseMessage);
+			var conversation = new List<ChatMessage>();
 
-			// Pose a question to the assistant
-			humanMessageText = @$"
+			var userPrompt = @$"
 Summarize the following text in a maximum of 20 words:
 
 # Hiking Benefits
@@ -61,13 +60,14 @@ Summarize the following text in a maximum of 20 words:
 	- Sense of Accomplishment: Reaching a summit or completing a challenging trail gives a sense of achievement.
 Remember, hiking can be tailored to your fitness level—start with shorter, easier trails and gradually progress. Lace up those hiking boots and embark on an adventure! 🌲🥾
 			";
-			base.WriteLine(humanMessageText, ConsoleColor.Yellow);
-			completionOptions.Messages.Add(new ChatRequestUserMessage(humanMessageText));
+			base.WriteLine($"[User]: {userPrompt}", ConsoleColor.Yellow);
+			conversation.Add(new UserChatMessage(userPrompt));
 
-			// Get the response from the assistant
-			completions = await openAIClient.GetChatCompletionsAsync(completionOptions);
-			aiResponse = completions.Choices[0].Message;
-			base.WriteLine(aiResponse.Content, ConsoleColor.Green);
+			var completion = (await chatClient.CompleteChatAsync(conversation, completionOptions)).Value;
+			var completionRole = completion.Role;
+			var completionText = completion.Content[0].Text;
+
+			base.WriteLine($"[{completionRole}]: {completionText}", ConsoleColor.Green);
 		}
 	}
 }

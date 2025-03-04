@@ -2,7 +2,9 @@ using Azure;
 using Azure.AI.OpenAI;
 using Hiker.Shared;
 using Microsoft.Extensions.Configuration;
+using OpenAI.Chat;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Hiker.OpenAI
@@ -19,27 +21,33 @@ namespace Hiker.OpenAI
 
 			var endpoint = new Uri(openAiEndpoint);
 			var credentials = new AzureKeyCredential(openAiKey);
-			var openAIClient = new OpenAIClient(endpoint, credentials);
+			var openAIClient = new AzureOpenAIClient(endpoint, credentials);
+			var chatClient = openAIClient.GetChatClient(openAiGptDeploymentName);
 
-			var completionOptions = new ChatCompletionsOptions
+			var completionOptions = new ChatCompletionOptions
 			{
-				MaxTokens = 1000,
+				MaxOutputTokenCount = 400,
 				Temperature = 1f,
 				FrequencyPenalty = 0.0f,
 				PresencePenalty = 0.0f,
-				NucleusSamplingFactor = 0.95f, // Top P
-				DeploymentName = openAiGptDeploymentName
+				TopP = 0.95f,
 			};
 
-			var humanMessageText = default(string);
-			var completions = default(ChatCompletions);
-			var aiResponse = default(ChatResponseMessage);
+			var conversation = new List<ChatMessage>();
 
-			// Configure the assistant with a system message and some hiking history
-			humanMessageText = @"
-You are upbeat and friendly. You introduce yourself when first saying hello. 
+			// Configure the assistant with a system prompt
+			var systemPrompt = @"
+You are upbeat and friendly. You introduce yourself as a Hiking History assistant when first saying hello. 
 
-You will provide short answers to my questions, based on my hiking records below:
+You will provide short answers to my questions, based on hiking history records provided by the user.
+			";
+			base.WriteLine($"[System]: {systemPrompt}", ConsoleColor.Cyan);
+			conversation.Add(new SystemChatMessage(systemPrompt));
+
+			// Provide the assistant with your hiking history
+			var userPrompt = @"
+Hi. Here is my hiking history. I will want you to analyze this history in response to questions I will ask.
+
 
               -=-=- Hiking History -=-=--
 
@@ -56,33 +64,31 @@ You will provide short answers to my questions, based on my hiking records below
 | Buttress        | 1995-07-01 | USA      | Sunny   
 | --------------- | ---------- | -------- | --------
 			";
-			base.WriteLine(humanMessageText, ConsoleColor.Cyan);
-			completionOptions.Messages.Add(new ChatRequestSystemMessage(humanMessageText));
+			base.WriteLine($"[User]: {userPrompt}", ConsoleColor.Yellow);
+			conversation.Add(new UserChatMessage(userPrompt));
 
-			// Say hello to the assistant
-			humanMessageText = @"
-Hi! 
-			";
-			base.WriteLine(humanMessageText, ConsoleColor.Yellow);
-			completionOptions.Messages.Add(new ChatRequestUserMessage(humanMessageText));
+			// Get the response from the assistant with an acknowledgment that it understands your hiking history
+			var completion = (await chatClient.CompleteChatAsync(conversation, completionOptions)).Value;
+			var completionRole = completion.Role;
+			var completionText = completion.Content[0].Text;
 
-			// Get the response from the assistant ...
-			completions = await openAIClient.GetChatCompletionsAsync(completionOptions);
-			aiResponse = completions.Choices[0].Message;
-			base.WriteLine(aiResponse.Content, ConsoleColor.Green);
-			completionOptions.Messages.Add(new ChatRequestAssistantMessage(aiResponse.Content));
+			base.WriteLine($"[{completionRole}]: {completionText}", ConsoleColor.Green);
 
-			// Supply the hiking history request to the assistant
-			humanMessageText = @"
+			conversation.Add(new AssistantChatMessage(completionText));
+
+			// Ask a question regarding hiking history
+			userPrompt = @"
 I would like to know the ratio of hikes I did in Canada compared to hikes done in other countries.
 			";
-			base.WriteLine(humanMessageText, ConsoleColor.Yellow);
-			completionOptions.Messages.Add(new ChatRequestUserMessage(humanMessageText));
+			base.WriteLine($"[User]: {userPrompt}", ConsoleColor.Yellow);
+			conversation.Add(new UserChatMessage(userPrompt));
 
-			// Get the response from the assistant with the answer
-			completions = await openAIClient.GetChatCompletionsAsync(completionOptions);
-			aiResponse = completions.Choices[0].Message;
-			base.WriteLine(aiResponse.Content, ConsoleColor.Green);
+			// Get the response from the assistant with the history query results
+			completion = await chatClient.CompleteChatAsync(conversation, completionOptions);
+			completionRole = completion.Role;
+			completionText = completion.Content[0].Text;
+
+			base.WriteLine($"[{completionRole}]: {completionText}", ConsoleColor.Green);
 		}
 	}
 }

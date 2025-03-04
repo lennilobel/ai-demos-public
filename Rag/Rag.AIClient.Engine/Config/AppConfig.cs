@@ -11,7 +11,7 @@ namespace Rag.AIClient.Engine.Config
 		public string ExternalRagProviderType { get; set; }
 		public EmbeddingModelType EmbeddingModelType { get; set; }
 
-		public SqlConfig SqlServer { get; set; }
+		public SqlConfig SqlServer2022 { get; set; }
         public SqlConfig AzureSql { get; set; }
 		public SqlConfig AzureSqlPreview { get; set; }
 		public class SqlConfig
@@ -73,7 +73,7 @@ namespace Rag.AIClient.Engine.Config
 				public string TextEmbedding3Small { get; set; }
 				public string TextEmbeddingAda002 { get; set; }
 			}
-			public string CompletionsDeploymentName { get; set; }
+			public string CompletionDeploymentName { get; set; }
 			public string DalleDeploymentName { get; set; }
 		}
 

@@ -1,10 +1,13 @@
-using Azure.AI.OpenAI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenAI.Chat;
+using OpenAI.Images;
 using Rag.AIClient.Engine.Config;
 using Rag.AIClient.Engine.EmbeddingModels;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,9 +39,10 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			this.SayHello();
 
-			var completionsOptions = this.InitializeCompletionsOptions();
+			var completionOptions = this.InitializeCompletionOptions();
+			var conversation = new List<ChatMessage>();
 
-			this.SetChatPrompt(completionsOptions);
+			this.SetChatSystemPrompt(conversation);
 
 			this._currentQuestionIndex = 0;
 			while (true)
@@ -52,7 +56,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 				try
 				{
-					await this.ProcessQuestion(question, completionsOptions);
+					await this.ProcessQuestion(question, completionOptions, conversation);
 				}
 				catch (Exception ex)
 				{
@@ -73,22 +77,20 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 		protected abstract void ShowBanner();
 
-		private ChatCompletionsOptions InitializeCompletionsOptions() =>
+		private ChatCompletionOptions InitializeCompletionOptions() =>
 			new()
 			{
-				MaxTokens = 1000,                   // Max number of tokens for the response; the more tokens you specify (spend), the more verbose the response
-				Temperature = 1.0f,                 // Range is 0.0 to 2.0; controls "apparent creativity"; higher = more random, lower = more deterministic
-				FrequencyPenalty = 0.0f,            // Range is -2.0 to 2.0; controls likelihood of repeating words; higher = less likely, lower = more likely
-				PresencePenalty = 0.0f,             // Range is -2.0 to 2.0; controls likelihood of introducing new topics; higher = more likely, lower = less likely
-				NucleusSamplingFactor = 0.95f,      // Range is 0.0 to 2.0; aka "Top P sampling"; temperature alternative; controls diversity of responses (1.0 is full random, lower values limit randomness)
-				DeploymentName =                    // The deployment name to specify which completions model to use
-					Shared.AppConfig.OpenAI.CompletionsDeploymentName,
+				MaxOutputTokenCount = 1000,	// Max number of tokens for the response; the more tokens you specify (spend), the more verbose the response
+				Temperature = 1.0f,         // Range is 0.0 to 2.0; controls "apparent creativity"; higher = more random, lower = more deterministic
+				FrequencyPenalty = 0.0f,    // Range is -2.0 to 2.0; controls likelihood of repeating words; higher = less likely, lower = more likely
+				PresencePenalty = 0.0f,     // Range is -2.0 to 2.0; controls likelihood of introducing new topics; higher = more likely, lower = less likely
+				TopP = 0.95f,				// Range is 0.0 to 2.0; temperature alternative; controls diversity of responses (1.0 is full random, lower values limit randomness)
 			};
 
-		private void SetChatPrompt(ChatCompletionsOptions completionsOptions)
+		private void SetChatSystemPrompt(List<ChatMessage> conversation)
 		{
 			var sb = new StringBuilder();
-			sb.Append(this.BuildChatPrompt());
+			sb.Append(this.BuildChatSystemPrompt());
 
 			if (DemoConfig.Instance.NoEmojis)
 			{
@@ -105,14 +107,14 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 				sb.AppendLine($"Translate your recommendations in {DemoConfig.Instance.ResponseLanguage}; don't include the recommendations in English. ");
 			}
 
-			var prompt = sb.ToString();
+			var systemPrompt = sb.ToString();
 
-			this.ConsoleWritePromptMessage(prompt);
+			this.ConsoleWritePromptMessage(systemPrompt);
 
-			completionsOptions.Messages.Add(new ChatRequestSystemMessage(prompt));
+			conversation.Add(new SystemChatMessage(systemPrompt));
 		}
 
-		protected abstract string BuildChatPrompt();
+		protected abstract string BuildChatSystemPrompt();
 
 		private string GetQuestion()
 		{
@@ -168,13 +170,13 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			return autoQuestion;
 		}
 
-		private async Task ProcessQuestion(string question, ChatCompletionsOptions completionsOptions)
+		private async Task ProcessQuestion(string question, ChatCompletionOptions completionOptions, List<ChatMessage> conversation)
 		{
 			// Get similarity results from the database using a vector search
 			var results = await this.GetDatabaseResults(question);
 
 			// Generate a natural language response (Completions API using a GPT model)
-			var answer = await this.GenerateAnswer(question, results, completionsOptions);
+			var answer = await this.GenerateAnswer(question, results, completionOptions, conversation);
 
 			this.ConsoleWriteAssistantResponse(answer);
 
@@ -204,13 +206,11 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			var vector = default(float[]);
 			try
 			{
-				var embeddingsOptions = new EmbeddingsOptions(
-					deploymentName: EmbeddingModelFactory.GetDeploymentName(),  // Text embeddings model
-					input: [question]);											// Natural language query
+				var input = new[] { question };
+				var embeddingClient = Shared.AzureOpenAIClient.GetEmbeddingClient(EmbeddingModelFactory.GetDeploymentName());
+				var embedding = (await embeddingClient.GenerateEmbeddingsAsync(input)).Value.First();
 
-				var embeddings = await Shared.OpenAIClient.GetEmbeddingsAsync(embeddingsOptions);
-				var embeddingItems = embeddings.Value.Data;
-				vector = embeddingItems[0].Embedding.ToArray();
+				vector = embedding.ToFloats().ToArray();
 			}
 			catch (Exception ex)
 			{
@@ -225,7 +225,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 		protected abstract Task<JObject[]> GetDatabaseResults(string question);
 
-		private async Task<string> GenerateAnswer(string question, dynamic[] results, ChatCompletionsOptions completionsOptions)
+		private async Task<string> GenerateAnswer(string question, dynamic[] results, ChatCompletionOptions completionOptions, List<ChatMessage> conversation)
 		{
 			if (results == null)
 			{
@@ -256,14 +256,15 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 				}
 			}
 
-			var userMessagePrompt = sb.ToString();
+			var userPrompt = sb.ToString();
 
-			this.ConsoleWritePromptMessage(userMessagePrompt);
+			this.ConsoleWritePromptMessage(userPrompt);
 
-			completionsOptions.Messages.Add(new ChatRequestUserMessage(userMessagePrompt));
+			conversation.Add(new UserChatMessage(userPrompt));
 
-			var completions = await Shared.OpenAIClient.GetChatCompletionsAsync(completionsOptions);    // GPT model
-			var answer = completions.Value.Choices[0].Message.Content;                                  // Natural language answer
+			var chatClient = Shared.AzureOpenAIClient.GetChatClient(Shared.AppConfig.OpenAI.CompletionDeploymentName);
+			var completion = (await chatClient.CompleteChatAsync(conversation, completionOptions)).Value;
+			var answer = completion.Content[0].Text;
 
 			this._elapsedGenerateAnswer = DateTime.Now.Subtract(started);
 
@@ -290,17 +291,19 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			this.ConsoleWritePromptMessage(imagePrompt);
 
-			var response = default(Azure.Response<ImageGenerations>);
+			var imageClient = Shared.AzureOpenAIClient.GetImageClient(Shared.AppConfig.OpenAI.DalleDeploymentName);
+
+			var options = new ImageGenerationOptions
+			{
+				Quality = GeneratedImageQuality.Standard,
+				Size = GeneratedImageSize.W1024xH1792,
+				ResponseFormat = GeneratedImageFormat.Uri,
+			};
+
+			var generatedImage = default(GeneratedImage);
 			try
 			{
-				response = await Shared.OpenAIClient.GetImageGenerationsAsync(
-					new ImageGenerationOptions()
-					{
-						DeploymentName = Shared.AppConfig.OpenAI.DalleDeploymentName,
-						Prompt = imagePrompt,
-						Size = ImageSize.Size1024x1792,
-						Quality = ImageGenerationQuality.Standard,
-					});
+				generatedImage = (await imageClient.GenerateImageAsync(imagePrompt, options)).Value;
 			}
 			catch (Exception ex)
 			{
@@ -310,19 +313,18 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			this._elapsedGeneratePoster = DateTime.Now.Subtract(started);
 
-			if (response == null)
+			if (generatedImage == null)
 			{
 				return;
 			}
 
-			var generatedImage = response.Value.Data[0];
 			if (!string.IsNullOrEmpty(generatedImage.RevisedPrompt) && DemoConfig.Instance.ShowInternalOperations)
 			{
 				this.ConsoleWritePromptMessage($"Input prompt revised to:\n{generatedImage.RevisedPrompt}");
 			}
 
-			this.ConsoleWriteAssistantResponse($"Generated image is ready at:\n{generatedImage.Url.AbsoluteUri}");
-			this.OpenBrowser(generatedImage.Url.AbsoluteUri);
+			this.ConsoleWriteAssistantResponse($"Generated image is ready at:\n{generatedImage.ImageUri.AbsoluteUri}");
+			this.OpenBrowser(generatedImage.ImageUri.AbsoluteUri);
 		}
 
 		protected abstract string BuildImageGenerationPrompt();

@@ -16,6 +16,5 @@ CREATE TABLE Movie
 	Video				bit,
 	VoteAverage			decimal(3, 1),
 	VoteCount			int,
-	Vector				varbinary(8000)
+	Vector				vector(1536)	-- *Preview*
 )
-

@@ -1,8 +1,12 @@
 using Azure;
 using Azure.AI.OpenAI;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
+using Microsoft.VisualBasic;
+using OpenAI.Chat;
 using Rag.AIClient.Engine;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -41,7 +45,7 @@ namespace Rag.AIClient
 				[
 					"May the force be with you",
 					"I'm gonna make him an offer he can't refuse",
-					"Toga party",
+					"Drunk and stupid is no way to go through life, son",
 					"One ring to rule them all",
 				],
 				// Movie characters
@@ -95,7 +99,7 @@ namespace Rag.AIClient
 					var queryVector = await this.VectorizeText(query);
 					var movie = this.RunVectorSearch(queryVector);
 
-					Console.ForegroundColor = ConsoleColor.Yellow; Console.Write($"{query,-50}");
+					Console.ForegroundColor = ConsoleColor.Yellow; Console.Write($"{query,-56}");
 					Console.ForegroundColor = ConsoleColor.White; Console.Write("matches ");
 					Console.ForegroundColor = ConsoleColor.Green; Console.WriteLine(movie.Title);
 					Console.ResetColor();
@@ -109,25 +113,18 @@ namespace Rag.AIClient
 		{
 			// Prepare an OpenAI client
 			var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-			var openAIClient = new OpenAIClient(
+			var openAIClient = new AzureOpenAIClient(
 				new Uri(config["AppConfig:OpenAI:Endpoint"]),
 				new AzureKeyCredential(config["AppConfig:OpenAI:ApiKey"])
 			);
 
-			// Create options for the OpenAI Embeddings API, specifying the deployment model and input text
-			var embeddingsOptions = new EmbeddingsOptions(
-				deploymentName: "lenni-text-embedding-3-small",
-				input: [text]
-			);
+			// Call OpenAI API to get the embedding for the input text
+			var input = new[] { text };
+			var embeddingClient = openAIClient.GetEmbeddingClient("lenni-text-embedding-3-small");
+			var embedding = (await embeddingClient.GenerateEmbeddingsAsync(input)).Value.First();
 
-			// Call OpenAI API to get the embeddings for the input text
-			var openAIEmbeddings = await openAIClient.GetEmbeddingsAsync(embeddingsOptions);
-
-			// Extract the embedding data (the vector representation of the text) from the API response
-			var embeddings = openAIEmbeddings.Value.Data;
-
-			// Convert the first embedding from the response to an array of float values (the vector)
-			var vector = embeddings[0].Embedding.ToArray();
+			// Convert the embedding to an array of float values (the vector)
+			var vector = embedding.ToFloats().ToArray();
 
 			// Return the vectorized representation of the input text
 			return vector;
@@ -166,43 +163,43 @@ namespace Rag.AIClient
 			var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 
 			// Create an OpenAI client using the endpoint and API key from configuration
-			var openAIClient = new OpenAIClient(
+			var openAIClient = new AzureOpenAIClient(
 				new Uri(config["AppConfig:OpenAI:Endpoint"]),
 				new AzureKeyCredential(config["AppConfig:OpenAI:ApiKey"])
 			);
 
-			// Define options for the chat completions, including parameters like max tokens, temperature, and penalties
-			var completionOptions = new ChatCompletionsOptions
+			// Define options for the chat completion, including parameters like max tokens, temperature, and penalties
+			var completionOptions = new ChatCompletionOptions
 			{
-				MaxTokens = 1000,                   // Max number of tokens for the response; the more tokens you specify (spend), the more verbose the response
-				Temperature = 1.0f,                 // Range is 0.0 to 2.0; controls "apparent creativity"; higher = more random, lower = more deterministic
-				FrequencyPenalty = 0.0f,            // Range is -2.0 to 2.0; controls likelihood of repeating words; higher = less likely, lower = more likely
-				PresencePenalty = 0.0f,				// Range is -2.0 to 2.0; controls likelihood of introducing new topics; higher = more likely, lower = less likely
-				NucleusSamplingFactor = 0.95f,      // Range is 0.0 to 2.0; aka "Top P sampling"; temperature alternative; controls diversity of responses (1.0 is full random, lower values limit randomness)
-				DeploymentName = "lenni-gpt-4o",	// The deployment name to specify which completions model to use
+				MaxOutputTokenCount = 1000, // Max number of tokens for the response; the more tokens you specify (spend), the more verbose the response
+				Temperature = 1.0f,         // Range is 0.0 to 2.0; controls "apparent creativity"; higher = more random, lower = more deterministic
+				FrequencyPenalty = 0.0f,    // Range is -2.0 to 2.0; controls likelihood of repeating words; higher = less likely, lower = more likely
+				PresencePenalty = 0.0f,     // Range is -2.0 to 2.0; controls likelihood of introducing new topics; higher = more likely, lower = less likely
+				TopP = 0.95f,               // Range is 0.0 to 2.0; temperature alternative; controls diversity of responses (1.0 is full random, lower values limit randomness)
 			};
 
+			var chatClient = openAIClient.GetChatClient("lenni-gpt-4o");
+			var conversation = new List<ChatMessage>();
+
 			// Interact with the model by sending various prompts and displaying the answers
-			await this.AskAndAnswer(openAIClient, completionOptions, "Provide a summary of these movies: Return of the Jedi, The Godfather, Animal House, The Two Towers.");
-			await this.AskAndAnswer(openAIClient, completionOptions, "Only show the movie titles.");
-			await this.AskAndAnswer(openAIClient, completionOptions, "Go back to showing full descriptions. Also, include additional movies that I might like.");
-			await this.AskAndAnswer(openAIClient, completionOptions, "Go back to showing a summary of just the movies I asked about, with no additional recommendations, translated to Spanish.");
+			await this.AskAndAnswer(chatClient, conversation, completionOptions, "Provide a summary of these movies: Return of the Jedi, The Godfather, Animal House, The Two Towers.");
+			await this.AskAndAnswer(chatClient, conversation, completionOptions, "Only show the movie titles.");
+			await this.AskAndAnswer(chatClient, conversation, completionOptions, "Go back to showing full descriptions. Also, include additional movies that I might like.");
+			await this.AskAndAnswer(chatClient, conversation, completionOptions, "Go back to showing a summary of just the movies I asked about, with no additional recommendations, translated to Spanish.");
 		}
 
-		private async Task AskAndAnswer(OpenAIClient openAIClient, ChatCompletionsOptions completionOptions, string question)
+		private async Task AskAndAnswer(ChatClient chatClient, List<ChatMessage> conversation, ChatCompletionOptions completionOptions, string question)
 		{
 			// Display the question
 			Console.ForegroundColor = ConsoleColor.Yellow;
 			Console.WriteLine(question);
 
-			// Add the question as a message to the completion options
-			completionOptions.Messages.Add(new ChatRequestUserMessage(question));
-
 			// Get the chat completion response from OpenAI based on the provided question and options
-			var completions = await openAIClient.GetChatCompletionsAsync(completionOptions);
+			conversation.Add(new UserChatMessage(question));
+			var completion = (await chatClient.CompleteChatAsync(conversation, completionOptions)).Value;
 
 			// Extract the answer from the first choice in the response
-			var answer = completions.Value.Choices[0].Message.Content;
+			var answer = completion.Content[0].Text;
 
 			// Display the answer
 			Console.ForegroundColor = ConsoleColor.Green;

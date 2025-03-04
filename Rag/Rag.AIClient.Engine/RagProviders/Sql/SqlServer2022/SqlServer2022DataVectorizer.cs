@@ -1,6 +1,6 @@
-using Azure.AI.OpenAI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenAI.Embeddings;
 using Rag.AIClient.Engine.EmbeddingModels;
 using Rag.AIClient.Engine.RagProviders.Base;
 using System;
@@ -64,25 +64,21 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 			ConsoleOutput.WriteLine($"Generated and embedded vectors for {itemCount} document(s)", ConsoleColor.Yellow);
 		}
 
-		private async Task<IReadOnlyList<EmbeddingItem>> GenerateEmbeddings(JObject[] documents)
+		private async Task<OpenAIEmbedding[]> GenerateEmbeddings(JObject[] documents)
         {
             ConsoleOutput.Write($"Generating embeddings... ", ConsoleColor.Green);
 
-            // Generate embeddings based on the textual content of each document
-            var embeddingsOptions = new EmbeddingsOptions(
-                deploymentName: EmbeddingModelFactory.GetDeploymentName(),
-                input: documents.Select(d => d.ToString()).ToArray()
-			);
+			// Generate embeddings based on the textual content of each document
+			var input = documents.Select(d => d.ToString()).ToArray();
+			var embeddingClient = Shared.AzureOpenAIClient.GetEmbeddingClient(EmbeddingModelFactory.GetDeploymentName());
+			var embeddings = (await embeddingClient.GenerateEmbeddingsAsync(input)).Value.ToArray();
 
-            var openAIEmbeddings = await Shared.OpenAIClient.GetEmbeddingsAsync(embeddingsOptions);
-            var embeddings = openAIEmbeddings.Value.Data;
+			ConsoleOutput.WriteLine(embeddings.Length, ConsoleColor.Green);
 
-			ConsoleOutput.WriteLine(embeddings.Count, ConsoleColor.Green);
-			
-            return embeddings;
-        }
+			return embeddings;
+		}
 
-        private async Task SaveVectors(JObject[] documents, IReadOnlyList<EmbeddingItem> embeddings)
+		private async Task SaveVectors(JObject[] documents, OpenAIEmbedding[] embeddings)
         {
 			ConsoleOutput.WriteLine("Saving vectors", ConsoleColor.Green);
 
@@ -94,18 +90,18 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 
             for (var i = 0; i < documents.Length; i++)
             {
-                var movieId = documents[i]["MovieId"].Value<int>();
-                var vector = embeddings[i].Embedding;
+				var movieId = documents[i]["MovieId"].Value<int>();
+				var vector = embeddings[i].ToFloats().ToArray();
 
                 var vectorValueId = 1;
-                foreach (var vectorValue in vector.ToArray())
+                foreach (var vectorValue in vector)
                 {
-                    movieVectors.Rows.Add(new object[]
-                    {
-                        movieId,
+                    movieVectors.Rows.Add(
+					[
+						movieId,
                         vectorValueId++,
                         vectorValue
-                    });
+                    ]);
                 }
             }
 

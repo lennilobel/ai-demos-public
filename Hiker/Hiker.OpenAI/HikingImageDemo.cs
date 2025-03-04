@@ -2,6 +2,7 @@ using Azure;
 using Azure.AI.OpenAI;
 using Hiker.Shared;
 using Microsoft.Extensions.Configuration;
+using OpenAI.Images;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -20,7 +21,8 @@ namespace Hiker.OpenAI
 
 			var endpoint = new Uri(openAiEndpoint);
 			var credentials = new AzureKeyCredential(openAiKey);
-			var openAIClient = new OpenAIClient(endpoint, credentials);
+			var openAIClient = new AzureOpenAIClient(endpoint, credentials);
+			var imageClient = openAIClient.GetImageClient(openAiDalleDeploymentName);
 
 			var imagePrompt = @"
 A postal card with a happy hiker waving, and a beautiful mountain in the background.
@@ -29,16 +31,16 @@ The postal card has text in red saying: 'You are invited for a hike!'
 			";
 			base.WriteLine(imagePrompt, ConsoleColor.Cyan);
 
-			var response = await openAIClient.GetImageGenerationsAsync(
-				new ImageGenerationOptions()
-				{
-					DeploymentName = openAiDalleDeploymentName,
-					Prompt = imagePrompt,
-					Size = ImageSize.Size1024x1024,
-					Quality = ImageGenerationQuality.Standard
-				});
+			var options = new ImageGenerationOptions
+			{
+				Quality = GeneratedImageQuality.Standard,
+				Size = GeneratedImageSize.W1024xH1024,
+				//Style = GeneratedImageStyle.Vivid,
+				ResponseFormat = GeneratedImageFormat.Uri,
+			};
 
-			var generatedImage = response.Value.Data[0];
+			var generatedImage = (await imageClient.GenerateImageAsync(imagePrompt, options)).Value;
+
 			if (!string.IsNullOrEmpty(generatedImage.RevisedPrompt))
 			{
 				base.WriteLine("Input prompt revised to:", ConsoleColor.Green);
@@ -46,9 +48,9 @@ The postal card has text in red saying: 'You are invited for a hike!'
 			}
 
 			base.WriteLine("Generated image is ready at:", ConsoleColor.Green);
-			base.WriteLine($"{generatedImage.Url.AbsoluteUri}\n", ConsoleColor.Gray);
+			base.WriteLine($"{generatedImage.ImageUri.AbsoluteUri}\n", ConsoleColor.Gray);
 
-			this.OpenBrowser(generatedImage.Url.AbsoluteUri);
+			this.OpenBrowser(generatedImage.ImageUri.AbsoluteUri);
 		}
 
 		private void OpenBrowser(string url)

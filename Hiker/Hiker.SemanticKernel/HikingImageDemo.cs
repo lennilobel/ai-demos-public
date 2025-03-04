@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
+using Microsoft.SemanticKernel.TextToImage;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;

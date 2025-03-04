@@ -3,7 +3,7 @@ CREATE PROCEDURE AskQuestion
 AS
 BEGIN
 
-	DECLARE @Vector varbinary(8000)
+	DECLARE @Vector vector(1536)	-- *Preview*
 
 	EXEC VectorizeText @Question, @Vector OUTPUT
 

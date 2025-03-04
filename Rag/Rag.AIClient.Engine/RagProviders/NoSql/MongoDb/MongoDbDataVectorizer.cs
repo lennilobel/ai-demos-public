@@ -1,6 +1,6 @@
-using Azure.AI.OpenAI;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using OpenAI.Embeddings;
 using Rag.AIClient.Engine.EmbeddingModels;
 using Rag.AIClient.Engine.RagProviders.Base;
 using System;
@@ -18,7 +18,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 		{
 		}
 
-		protected override async Task VectorizeEntities(int[] movieIds)
+		protected override async Task VectorizeEntities(int[] ids)
 		{
 			Debugger.Break();
 
@@ -74,7 +74,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 			ConsoleOutput.WriteLine($"Generated and embedded vectors for {itemCount} document(s)", ConsoleColor.Yellow);
 		}
 
-		private async Task<IReadOnlyList<EmbeddingItem>> GenerateEmbeddings(BsonDocument[] documents)
+		private async Task<OpenAIEmbedding[]> GenerateEmbeddings(BsonDocument[] documents)
 		{
 			ConsoleOutput.Write("Generating embeddings... ", ConsoleColor.Green);
 
@@ -85,20 +85,16 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 			}
 
 			// Generate embeddings based on the JSON string content of each document
-			var embeddingsOptions = new EmbeddingsOptions(
-				deploymentName: EmbeddingModelFactory.GetDeploymentName(),
-				input: documents.Select(d => d.ToString())
-			);
+			var input = documents.Select(d => d.ToString()).ToArray();
+			var embeddingClient = Shared.AzureOpenAIClient.GetEmbeddingClient(EmbeddingModelFactory.GetDeploymentName());
+			var embeddings = (await embeddingClient.GenerateEmbeddingsAsync(input)).Value.ToArray();
 
-			var openAIEmbeddings = await Shared.OpenAIClient.GetEmbeddingsAsync(embeddingsOptions);
-			var embeddings = openAIEmbeddings.Value.Data;
-
-			ConsoleOutput.WriteLine(embeddings.Count, ConsoleColor.Green);
+			ConsoleOutput.WriteLine(embeddings.Length, ConsoleColor.Green);
 
 			return embeddings;
 		}
 
-		private async Task SaveVectors(IMongoCollection<BsonDocument> collection, BsonDocument[] documents, IReadOnlyList<EmbeddingItem> embeddings)
+		private async Task SaveVectors(IMongoCollection<BsonDocument> collection, BsonDocument[] documents, OpenAIEmbedding[] embeddings)
 		{
 			ConsoleOutput.Write("Saving vectors... ", ConsoleColor.Green);
 
@@ -108,8 +104,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 			for (var i = 0; i < documents.Length; i++)
 			{
 				var document = documents[i];
-				var embeddingsArray = embeddings[i].Embedding.ToArray();
-				var vector = new BsonArray(embeddingsArray);
+				var vector = new BsonArray(embeddings[i].ToFloats().ToArray());
 				document["vector"] = vector;
 
 				var idFilter = Builders<BsonDocument>.Filter.Eq("_id", document["_id"]);

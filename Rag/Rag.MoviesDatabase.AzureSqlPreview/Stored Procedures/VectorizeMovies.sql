@@ -19,7 +19,7 @@ BEGIN
 	DECLARE @ErrorCount int = 0
 
 	DECLARE curMovies CURSOR FOR
-		SELECT value FROM OPENJSON(@MoviesJson)
+		SELECT value FROM OPENJSON(@MoviesJson) ORDER BY JSON_VALUE(value, '$.Title')
 
 	OPEN curMovies
 	FETCH NEXT FROM curMovies INTO @MovieJson
@@ -30,10 +30,10 @@ BEGIN
 		DECLARE @MovieId int = JSON_VALUE(@MovieJson, '$.MovieId')
 		DECLARE @Title varchar(max) = JSON_VALUE(@MovieJson, '$.Title')
 
-		DECLARE @Message varchar(max) = CONCAT('Vectorizing movie ID ', @MovieId, ' - ', @Title)
+		DECLARE @Message varchar(max) = CONCAT('Vectorizing movie: ', @Title, ' (', @MovieId, ')')
 		RAISERROR(@Message, 0, 1) WITH NOWAIT
 
-		DECLARE @MovieVector varbinary(8000)
+		DECLARE @MovieVector vector(1536)	-- *Preview*
 
 		BEGIN TRY
 
