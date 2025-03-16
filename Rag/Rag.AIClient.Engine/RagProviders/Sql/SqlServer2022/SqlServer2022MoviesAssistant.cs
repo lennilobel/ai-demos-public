@@ -54,7 +54,7 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 					counter++;
 					if (DemoConfig.Instance.ShowInternalOperations && counter == 1)
 					{
-						ConsoleOutput.WriteHeading("SQL Server Vector Search Result", ConsoleColor.Green);
+						ConsoleHelper.WriteHeading("SQL Server Vector Search Result", ConsoleHelper.SystemColor);
 					}
 
 					var resultJson = rdr["MovieJson"].ToString();
@@ -63,8 +63,8 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 
 					if (DemoConfig.Instance.ShowInternalOperations)
 					{
-						ConsoleOutput.WriteLine($"{++counter}. {result["Title"]}", ConsoleColor.Green);
-						ConsoleOutput.WriteLine(JsonConvert.SerializeObject(result));
+						ConsoleHelper.WriteLine($"{++counter}. {result["Title"]} (distance: {rdr["CosineDistance"]})", ConsoleHelper.SystemColor);
+						ConsoleHelper.WriteLine(JsonConvert.SerializeObject(result), ConsoleHelper.SystemDimColor);
 					}
 				},
 				silent: true

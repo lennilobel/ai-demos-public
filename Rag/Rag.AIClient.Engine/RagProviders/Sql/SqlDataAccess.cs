@@ -19,9 +19,9 @@ namespace Rag.AIClient.Engine.RagProviders.Sql
 
 			if (!silent)
 			{
-				Console.ForegroundColor = ConsoleColor.Cyan;
+				ConsoleHelper.SetForegroundColor(ConsoleHelper.InfoColor);
 				Console.WriteLine($"Executing stored procedure {storedProcedureName}");
-				Console.ResetColor();
+				ConsoleHelper.ResetColor();
 			}
 
 			try
@@ -60,19 +60,19 @@ namespace Rag.AIClient.Engine.RagProviders.Sql
 			}
 			catch (Exception ex)
 			{
-				ConsoleOutput.WriteErrorLine($"Error executing stored procedure '{storedProcedureName}'");
-				ConsoleOutput.WriteErrorLine(ex.Message);
+				ConsoleHelper.WriteErrorLine($"Error executing stored procedure '{storedProcedureName}'");
+				ConsoleHelper.WriteErrorLine(ex.Message);
 			}
 		}
 
 		private static void OnStoredProcedureMessageReceived(object sender, SqlInfoMessageEventArgs e)
 		{
-			Console.ForegroundColor = ConsoleColor.DarkCyan;
+			ConsoleHelper.SetForegroundColor(ConsoleHelper.InfoDimColor);
 			foreach (SqlError error in e.Errors)
 			{
 				Console.WriteLine($"{++_outputLineNumber,5}: {error.Message}");
 			}
-			Console.ResetColor();
+			ConsoleHelper.ResetColor();
 		}
 
 	}

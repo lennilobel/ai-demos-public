@@ -42,7 +42,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 					.ToListAsync())
 						.ToArray();
 
-				ConsoleOutput.WriteLine(documents.Length.ToString(), ConsoleColor.Green);
+				ConsoleHelper.WriteLine(documents.Length.ToString(), ConsoleHelper.SystemColor);
 				itemCount += documents.Length;
 
 				if (documents.Length > 0)
@@ -51,7 +51,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 					{
 						var title = document.GetValue(base.RagProvider.EntityTitleFieldName).AsString;
 						var id = document.GetValue("_id").ToString();
-						ConsoleOutput.WriteLine($"{++counter,5}: Vectorizing entity - {title} (ID {id})", ConsoleColor.DarkCyan);
+						ConsoleHelper.WriteLine($"{++counter,5}: Vectorizing entity - {title} (ID {id})", ConsoleHelper.InfoDimColor);
 					}
 
 					// Generate text embeddings (vectors) for the batch of documents
@@ -62,7 +62,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 
 					var batchElapsed = DateTime.Now.Subtract(batchStarted);
 
-					ConsoleOutput.WriteLine($"Processed documents {itemCount - documents.Length + 1} - {itemCount} in {batchElapsed}", ConsoleColor.Cyan);
+					ConsoleHelper.WriteLine($"Processed documents {itemCount - documents.Length + 1} - {itemCount} in {batchElapsed}", ConsoleHelper.InfoColor);
 				}
 
 				if (documents.Length < BatchSize)
@@ -71,12 +71,12 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 				}
 			}
 
-			ConsoleOutput.WriteLine($"Generated and embedded vectors for {itemCount} document(s)", ConsoleColor.Yellow);
+			ConsoleHelper.WriteLine($"Generated and embedded vectors for {itemCount} document(s)", ConsoleHelper.UserColor);
 		}
 
 		private async Task<OpenAIEmbedding[]> GenerateEmbeddings(BsonDocument[] documents)
 		{
-			ConsoleOutput.Write("Generating embeddings... ", ConsoleColor.Green);
+			ConsoleHelper.Write("Generating embeddings... ", ConsoleHelper.SystemColor);
 
 			// Strip any previous vector from each document
 			foreach (var document in documents)
@@ -89,14 +89,14 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 			var embeddingClient = Shared.AzureOpenAIClient.GetEmbeddingClient(EmbeddingModelFactory.GetDeploymentName());
 			var embeddings = (await embeddingClient.GenerateEmbeddingsAsync(input)).Value.ToArray();
 
-			ConsoleOutput.WriteLine(embeddings.Length, ConsoleColor.Green);
+			ConsoleHelper.WriteLine(embeddings.Length, ConsoleHelper.SystemColor);
 
 			return embeddings;
 		}
 
 		private async Task SaveVectors(IMongoCollection<BsonDocument> collection, BsonDocument[] documents, OpenAIEmbedding[] embeddings)
 		{
-			ConsoleOutput.Write("Saving vectors... ", ConsoleColor.Green);
+			ConsoleHelper.Write("Saving vectors... ", ConsoleHelper.SystemColor);
 
 			var bulkOperations = new List<WriteModel<BsonDocument>>();
 
@@ -115,7 +115,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 			// Use bulk write to update the documents back to the container
 			await collection.BulkWriteAsync(bulkOperations);
 
-			ConsoleOutput.WriteLine(documents.Length, ConsoleColor.Green);
+			ConsoleHelper.WriteLine(documents.Length, ConsoleHelper.SystemColor);
 		}
 
 	}

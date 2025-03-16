@@ -12,7 +12,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 		public async Task VectorizeData()
 		{
-			ConsoleOutput.WriteHeading("Vectorize Data", ConsoleColor.Yellow);
+			ConsoleHelper.WriteHeading("Vectorize Data", ConsoleHelper.UserColor);
 			await this.VectorizeData(null);
 		}
 
@@ -24,7 +24,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			var elapsed = DateTime.Now.Subtract(started);
 
-			ConsoleOutput.WriteLine($"Data vectorized in {elapsed}", ConsoleColor.Yellow);
+			ConsoleHelper.WriteLine($"Data vectorized in {elapsed}", ConsoleHelper.UserColor);
 		}
 
 		protected abstract Task VectorizeEntities(int[] ids);

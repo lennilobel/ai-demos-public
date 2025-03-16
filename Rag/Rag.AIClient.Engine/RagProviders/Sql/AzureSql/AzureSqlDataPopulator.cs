@@ -16,9 +16,9 @@ namespace Rag.AIClient.Engine.RagProviders.Sql
 		{
 			await base.InitializeData();
 
-			ConsoleOutput.WriteHeading("Load Configuration", ConsoleColor.Yellow);
+			ConsoleHelper.WriteHeading("Load Configuration", ConsoleHelper.UserColor);
 
-			ConsoleOutput.WriteLine("Loading configuration", ConsoleColor.Yellow);
+			ConsoleHelper.WriteLine("Loading configuration", ConsoleHelper.UserColor);
 			await SqlDataAccess.RunStoredProcedure(
 				storedProcedureName: "LoadConfig",
 				storedProcedureParameters:

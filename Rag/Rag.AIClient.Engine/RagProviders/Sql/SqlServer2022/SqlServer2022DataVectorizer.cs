@@ -34,7 +34,7 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 			);
 
 			var moviesArray = JsonConvert.DeserializeObject<JObject[]>(moviesJson);
-			ConsoleOutput.WriteLine($"Vectorizing {moviesArray.Length} movie(s)", ConsoleColor.Yellow);
+			ConsoleHelper.WriteLine($"Vectorizing {moviesArray.Length} movie(s)", ConsoleHelper.UserColor);
 
 			const int BatchSize = 100;
 			var itemCount = 0;
@@ -47,7 +47,7 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 				var documents = moviesArray.Skip(i).Take(BatchSize).ToArray();
 				foreach (var document in documents)
 				{
-					ConsoleOutput.WriteLine($"{++itemCount,5}: Vectorizing entity - {document[base.RagProvider.EntityTitleFieldName]} (ID {document["MovieId"]})", ConsoleColor.DarkCyan);
+					ConsoleHelper.WriteLine($"{++itemCount,5}: Vectorizing entity - {document[base.RagProvider.EntityTitleFieldName]} (ID {document["MovieId"]})", ConsoleHelper.InfoDimColor);
 				}
 
 				// Generate text embeddings (vectors) for the batch of documents
@@ -58,29 +58,29 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.SqlServer
 
 				var batchElapsed = DateTime.Now.Subtract(batchStarted);
 
-				ConsoleOutput.WriteLine($"Processed rows {i + 1} - {i + documents.Length} in {batchElapsed}", ConsoleColor.Cyan);
+				ConsoleHelper.WriteLine($"Processed rows {i + 1} - {i + documents.Length} in {batchElapsed}", ConsoleHelper.InfoColor);
 			}
 
-			ConsoleOutput.WriteLine($"Generated and embedded vectors for {itemCount} document(s)", ConsoleColor.Yellow);
+			ConsoleHelper.WriteLine($"Generated and embedded vectors for {itemCount} document(s)", ConsoleHelper.UserColor);
 		}
 
 		private async Task<OpenAIEmbedding[]> GenerateEmbeddings(JObject[] documents)
         {
-            ConsoleOutput.Write($"Generating embeddings... ", ConsoleColor.Green);
+            ConsoleHelper.Write($"Generating embeddings... ", ConsoleHelper.SystemColor);
 
 			// Generate embeddings based on the textual content of each document
 			var input = documents.Select(d => d.ToString()).ToArray();
 			var embeddingClient = Shared.AzureOpenAIClient.GetEmbeddingClient(EmbeddingModelFactory.GetDeploymentName());
 			var embeddings = (await embeddingClient.GenerateEmbeddingsAsync(input)).Value.ToArray();
 
-			ConsoleOutput.WriteLine(embeddings.Length, ConsoleColor.Green);
+			ConsoleHelper.WriteLine(embeddings.Length, ConsoleHelper.SystemColor);
 
 			return embeddings;
 		}
 
 		private async Task SaveVectors(JObject[] documents, OpenAIEmbedding[] embeddings)
         {
-			ConsoleOutput.WriteLine("Saving vectors", ConsoleColor.Green);
+			ConsoleHelper.WriteLine("Saving vectors", ConsoleHelper.SystemColor);
 
 			var movieVectors = new DataTable();
 

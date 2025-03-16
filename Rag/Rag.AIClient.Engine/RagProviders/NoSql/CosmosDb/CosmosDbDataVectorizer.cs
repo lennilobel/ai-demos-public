@@ -52,7 +52,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
                 var documents = (await iterator.ReadNextAsync()).ToArray();
                 foreach (var document in documents)
                 {
-					ConsoleOutput.WriteLine($"{++itemCount,5}: Vectorizing entity - {document[base.RagProvider.EntityTitleFieldName]} (ID {document["id"]})", ConsoleColor.DarkCyan);
+					ConsoleHelper.WriteLine($"{++itemCount,5}: Vectorizing entity - {document[base.RagProvider.EntityTitleFieldName]} (ID {document["id"]})", ConsoleHelper.InfoDimColor);
 				}
 
                 // Generate vectors for the batch of documents
@@ -63,18 +63,18 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 
                 var batchElapsed = DateTime.Now.Subtract(batchStarted);
 
-                ConsoleOutput.WriteLine($"Processed documents {itemCount - documents.Length + 1} - {itemCount} in {batchElapsed}", ConsoleColor.Cyan);
+                ConsoleHelper.WriteLine($"Processed documents {itemCount - documents.Length + 1} - {itemCount} in {batchElapsed}", ConsoleHelper.InfoColor);
             }
 
             // Lower the throughput on the container
             await container.ReplaceThroughputAsync(ThroughputProperties.CreateAutoscaleThroughput(autoscaleMaxThroughput: 1000));
 
-            ConsoleOutput.WriteLine($"Generated and embedded vectors for {itemCount} document(s) with {this._errorCount} error(s) ({this._ruCost} RUs)", ConsoleColor.Yellow);
+            ConsoleHelper.WriteLine($"Generated and embedded vectors for {itemCount} document(s) with {this._errorCount} error(s) ({this._ruCost} RUs)", ConsoleHelper.UserColor);
         }
 
         private async Task<OpenAIEmbedding[]> GenerateEmbeddings(JObject[] documents)
         {
-            ConsoleOutput.Write("Generating embeddings... ", ConsoleColor.Green);
+            ConsoleHelper.Write("Generating embeddings... ", ConsoleHelper.SystemColor);
 
             // Strip meaningless properties and any previous vector from each document
             foreach (var document in documents)
@@ -93,14 +93,14 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 			var embeddingClient = Shared.AzureOpenAIClient.GetEmbeddingClient(EmbeddingModelFactory.GetDeploymentName());
             var embeddings = (await embeddingClient.GenerateEmbeddingsAsync(input)).Value.ToArray();
 
-            ConsoleOutput.WriteLine(embeddings.Length, ConsoleColor.Green);
+            ConsoleHelper.WriteLine(embeddings.Length, ConsoleHelper.SystemColor);
 
             return embeddings;
         }
 
         private async Task SaveVectors(Container container, JObject[] documents, OpenAIEmbedding[] embeddings)
         {
-            ConsoleOutput.Write("Saving vectors... ", ConsoleColor.Green);
+            ConsoleHelper.Write("Saving vectors... ", ConsoleHelper.SystemColor);
 
             // Set the vector property of each document from the generated embeddings
             for (var i = 0; i < documents.Length; i++)
@@ -125,7 +125,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
                         }
                         else
                         {
-                            ConsoleOutput.WriteErrorLine($"Error replacing document id='{id}'\n{t.Exception.Message}");
+                            ConsoleHelper.WriteErrorLine($"Error replacing document id='{id}'\n{t.Exception.Message}");
                             _errorCount++;
                         }
                     }));
@@ -133,7 +133,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 
             await Task.WhenAll(tasks);
 
-            ConsoleOutput.WriteLine(documents.Length, ConsoleColor.Green);
+            ConsoleHelper.WriteLine(documents.Length, ConsoleHelper.SystemColor);
         }
 
     }

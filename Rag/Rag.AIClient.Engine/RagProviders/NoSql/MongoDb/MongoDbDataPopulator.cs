@@ -22,7 +22,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 		{
 			Debugger.Break();
 
-			ConsoleOutput.WriteHeading("Load Data", ConsoleColor.Yellow);
+			ConsoleHelper.WriteHeading("Load Data", ConsoleHelper.UserColor);
 
 			this.DropDatabase();
 			var collection = await this.CreateCollection();
@@ -34,7 +34,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 		private void DropDatabase()
 		{
 			var databaseName = base.RagProvider.DatabaseName;
-			ConsoleOutput.WriteLine($"Deleting database '{databaseName}' (if exists)");
+			ConsoleHelper.WriteLine($"Deleting database '{databaseName}' (if exists)");
 			Shared.MongoClient.DropDatabase(databaseName);
 		}
 
@@ -71,13 +71,13 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 
 			var collection = database.GetCollection<BsonDocument>(collectionName);
 
-			ConsoleOutput.WriteLine($"Created '{collectionName}' collection");
+			ConsoleHelper.WriteLine($"Created '{collectionName}' collection");
 			return collection;
 		}
 
 		private async Task CreateDocuments(string jsonFilename, IMongoCollection<BsonDocument> collection)
 		{
-			ConsoleOutput.WriteLine($"Creating documents from {jsonFilename}");
+			ConsoleHelper.WriteLine($"Creating documents from {jsonFilename}");
 
 			var started = DateTime.Now;
 
@@ -92,14 +92,14 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 
 			await collection.InsertManyAsync(documents);
 
-			ConsoleOutput.WriteLine($"Created {documents.Count()} document(s) in {DateTime.Now.Subtract(started)}");
+			ConsoleHelper.WriteLine($"Created {documents.Count()} document(s) in {DateTime.Now.Subtract(started)}");
 		}
 
 		public override async Task UpdateData()
 		{
 			Debugger.Break();
 
-			ConsoleOutput.WriteHeading("Update Data", ConsoleColor.Yellow);
+			ConsoleHelper.WriteHeading("Update Data", ConsoleHelper.UserColor);
 
 			var databaseName = base.RagProvider.DatabaseName;
 			var collectionName = base.RagProvider.MongoDbConfig.CollectionName;
@@ -115,7 +115,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 		{
 			Debugger.Break();
 
-			ConsoleOutput.WriteHeading("Reset Data", ConsoleColor.Yellow);
+			ConsoleHelper.WriteHeading("Reset Data", ConsoleHelper.UserColor);
 
 			var databaseName = base.RagProvider.DatabaseName;
 			var collectionName = base.RagProvider.MongoDbConfig.CollectionName;
@@ -134,7 +134,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 
 			var result = await collection.DeleteManyAsync(filter);
 
-			ConsoleOutput.WriteLine($"Deleted {result.DeletedCount} movie(s)");
+			ConsoleHelper.WriteLine($"Deleted {result.DeletedCount} movie(s)");
 		}
 
 	}

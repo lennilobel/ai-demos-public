@@ -42,7 +42,7 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.AzureSql
 					counter++;
 					if (DemoConfig.Instance.ShowInternalOperations && counter == 1)
 					{
-						ConsoleOutput.WriteHeading("Azure SQL Database Vector Search Result", ConsoleColor.Green);
+						ConsoleHelper.WriteHeading("Azure SQL Database Vector Search Result", ConsoleHelper.SystemColor);
 					}
 
 					var resultJson = rdr["MovieJson"].ToString();
@@ -51,8 +51,8 @@ namespace Rag.AIClient.Engine.RagProviders.Sql.AzureSql
 
 					if (DemoConfig.Instance.ShowInternalOperations)
 					{
-						ConsoleOutput.WriteLine($"{++counter}. {result["Title"]} (similarity: {rdr["SimilarityScore"]})", ConsoleColor.Green);
-						ConsoleOutput.WriteLine(JsonConvert.SerializeObject(result));
+						ConsoleHelper.WriteLine($"{++counter}. {result["Title"]} (distance: {rdr["CosineDistance"]})", ConsoleHelper.SystemColor);
+						ConsoleHelper.WriteLine(JsonConvert.SerializeObject(result), ConsoleHelper.SystemDimColor);
 					}
 				},
 				silent: true

@@ -40,8 +40,8 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 
 			if (DemoConfig.Instance.ShowInternalOperations)
 			{
-				ConsoleOutput.WriteHeading("Cosmos DB for NoSQL Vector Search Query", ConsoleColor.Green);
-				ConsoleOutput.WriteLine(sql, ConsoleColor.Green);
+				ConsoleHelper.WriteHeading("Cosmos DB for NoSQL Vector Search Query", ConsoleHelper.SystemColor);
+				ConsoleHelper.WriteLine(sql, ConsoleHelper.SystemColor);
 			}
 
 			try
@@ -61,13 +61,13 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 
 				if (DemoConfig.Instance.ShowInternalOperations)
 				{
-					ConsoleOutput.WriteHeading("Cosmos DB for NoSQL Vector Search Result", ConsoleColor.Green);
+					ConsoleHelper.WriteHeading("Cosmos DB for NoSQL Vector Search Result", ConsoleHelper.SystemColor);
 
 					var counter = 0;
 					foreach (var result in results)
 					{
-						ConsoleOutput.WriteLine($"{++counter}. {result["title"]}", ConsoleColor.Green);
-						ConsoleOutput.WriteLine(JsonConvert.SerializeObject(result), ConsoleColor.DarkGreen);
+						ConsoleHelper.WriteLine($"{++counter}. {result["title"]}", ConsoleHelper.SystemColor);
+						ConsoleHelper.WriteLine(JsonConvert.SerializeObject(result), ConsoleHelper.SystemDimColor);
 					}
 				}
 
@@ -77,8 +77,8 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 			}
 			catch (Exception ex)
 			{
-				ConsoleOutput.WriteErrorLine("Error running vector search query");
-				ConsoleOutput.WriteErrorLine(ex.Message);
+				ConsoleHelper.WriteErrorLine("Error running vector search query");
+				ConsoleHelper.WriteErrorLine(ex.Message);
 
 				return null;
 			}

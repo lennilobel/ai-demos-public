@@ -1,18 +1,18 @@
+using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Azure;
-using Azure.AI.OpenAI;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using OpenAI.Embeddings;
-using System;
-using System.Collections.Generic;
+using Newtonsoft.Json;
+using Azure.AI.OpenAI;
 using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
+using OpenAI.Embeddings;
 
-namespace Rag.MoviesFunction.CosmosDb
+namespace FunctionApp1
 {
 	public class VectorizeDocumentsFunction
 	{
@@ -34,25 +34,25 @@ namespace Rag.MoviesFunction.CosmosDb
 			CosmosClient = new CosmosClient(cosmosDbConnectionString, new CosmosClientOptions { AllowBulkExecution = true });
 
 			var openAIEndpoint = Environment.GetEnvironmentVariable("OpenAIEndpoint");
-			var openAIKey = Environment.GetEnvironmentVariable("OpenAIKey");
-			OpenAIClient = new AzureOpenAIClient(new Uri(openAIEndpoint), new AzureKeyCredential(openAIKey));
+			var openAIApiKey = Environment.GetEnvironmentVariable("OpenAIApiKey");
+			OpenAIClient = new AzureOpenAIClient(new Uri(openAIEndpoint), new AzureKeyCredential(openAIApiKey));
 		}
 
 		public VectorizeDocumentsFunction(ILoggerFactory loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<VectorizeDocumentsFunction>();
+		{
+			this._logger = loggerFactory.CreateLogger<VectorizeDocumentsFunction>();
 		}
 
 		[Function("EmbedVectors")]
-        public async Task EmbedVectors(
-            [CosmosDBTrigger(
+		public async Task EmbedVectors(
+			[CosmosDBTrigger(
 				databaseName: DatabaseName,
 				containerName: ContainerName,
-			    Connection = "CosmosDbConnectionString",
-                LeaseContainerName = "lease",
-                CreateLeaseContainerIfNotExists = true
-            )]
-            IReadOnlyList<JsonElement> documentElements)
+				Connection = "CosmosDbConnectionString",
+				LeaseContainerName = "lease",
+				CreateLeaseContainerIfNotExists = true
+			)]
+			IReadOnlyList<JsonElement> documentElements)
 		{
 			if (documentElements == null || documentElements.Count == 0)
 			{
@@ -65,7 +65,7 @@ namespace Rag.MoviesFunction.CosmosDb
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "An error occurred processing changed documents");
+				this._logger.LogError(ex, "An error occurred processing changed documents");
 			}
 		}
 
@@ -78,7 +78,7 @@ namespace Rag.MoviesFunction.CosmosDb
 				return;
 			}
 
-			_logger.LogInformation($"Change detected in {documents.Length} document(s)");
+			this._logger.LogInformation($"Change detected in {documents.Length} document(s)");
 
 			var embeddings = await this.GenerateEmbeddings(documents);
 
@@ -129,7 +129,7 @@ namespace Rag.MoviesFunction.CosmosDb
 			}
 
 			var input = documents.Select(d => d.ToString()).ToArray();
-			var embeddingClient = OpenAIClient.GetEmbeddingClient(Environment.GetEnvironmentVariable("OpenAIDeploymentName"));
+			var embeddingClient = OpenAIClient.GetEmbeddingClient(Environment.GetEnvironmentVariable("OpenAIModelDeploymentName"));
 			var embeddings = (await embeddingClient.GenerateEmbeddingsAsync(input)).Value.ToArray();
 
 			this._logger.LogInformation($"Generated vector embeddings for {documents.Length} document(s)");

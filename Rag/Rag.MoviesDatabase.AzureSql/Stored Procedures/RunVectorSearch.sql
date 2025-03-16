@@ -22,7 +22,7 @@ BEGIN
 		@Vector AS qv															-- compare the query vector values
 		INNER JOIN MovieVector AS mv on qv.VectorValueId = mv.VectorValueId		-- with each movie's vector values
 	GROUP BY
-		mv.MovieId		-- 
+		mv.MovieId
 	ORDER BY
 		CosineDistance	-- Smaller distances (more similar) before larger distances (less similar)
 

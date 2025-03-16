@@ -81,7 +81,7 @@ namespace Rag.AIClient
 		{
 			Debugger.Break();
 
-			ConsoleOutput.WriteHeading("Text Embeddings", ConsoleColor.Cyan);
+			ConsoleHelper.WriteHeading("Text Embeddings", ConsoleHelper.InfoColor);
 
 			// Vectorize the movies
 			foreach (var movie in this._movies)
@@ -97,10 +97,10 @@ namespace Rag.AIClient
 					var queryVector = await this.VectorizeText(query);
 					var movie = this.RunVectorSearch(queryVector);
 
-					Console.ForegroundColor = ConsoleColor.Yellow; Console.Write($"{query,-56}");
-					Console.ForegroundColor = ConsoleColor.White; Console.Write("matches ");
-					Console.ForegroundColor = ConsoleColor.Green; Console.WriteLine(movie.Title);
-					Console.ResetColor();
+					ConsoleHelper.SetForegroundColor(ConsoleHelper.UserColor); Console.Write($"{query,-56}");
+					ConsoleHelper.SetForegroundColor(ConsoleHelper.ForegroundColor); Console.Write("matches ");
+					ConsoleHelper.SetForegroundColor(ConsoleHelper.SystemColor); Console.WriteLine(movie.Title);
+					ConsoleHelper.ResetColor();
 				}
 
 				Console.WriteLine();
@@ -155,7 +155,7 @@ namespace Rag.AIClient
 		{
 			Debugger.Break();
 
-			ConsoleOutput.WriteHeading("Completions", ConsoleColor.Cyan);
+			ConsoleHelper.WriteHeading("Completions", ConsoleHelper.InfoColor);
 
 			// Load configuration settings from appsettings.json
 			var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
@@ -189,7 +189,7 @@ namespace Rag.AIClient
 		private async Task AskAndAnswer(ChatClient chatClient, List<ChatMessage> conversation, ChatCompletionOptions completionOptions, string question)
 		{
 			// Display the question
-			Console.ForegroundColor = ConsoleColor.Yellow;
+			ConsoleHelper.SetForegroundColor(ConsoleHelper.UserColor);
 			Console.WriteLine(question);
 
 			// Stream the chat completion response from OpenAI based on the provided question and options
@@ -197,7 +197,7 @@ namespace Rag.AIClient
 			var completionUpdates = chatClient.CompleteChatStreamingAsync(conversation, completionOptions);
 
 			// Display the answer
-			Console.ForegroundColor = ConsoleColor.Green;
+			ConsoleHelper.SetForegroundColor(ConsoleHelper.SystemColor);
 			await foreach (var completionUpdate in completionUpdates)
 			{
 				foreach (var contentPart in completionUpdate.ContentUpdate)
@@ -207,7 +207,7 @@ namespace Rag.AIClient
 			}
 			Console.WriteLine();
 			Console.WriteLine();
-			Console.ResetColor();
+			ConsoleHelper.ResetColor();
 		}
 
 		#endregion

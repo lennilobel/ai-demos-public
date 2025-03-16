@@ -22,23 +22,23 @@ namespace Rag.AIClient.Engine.RagProviders.Sql
 
 			var started = DateTime.Now;
 
-			ConsoleOutput.WriteHeading("Load Data", ConsoleColor.Yellow);
+			ConsoleHelper.WriteHeading("Load Data", ConsoleHelper.UserColor);
 
-			ConsoleOutput.WriteLine("Deleting all data", ConsoleColor.Yellow);
+			ConsoleHelper.WriteLine("Deleting all data", ConsoleHelper.UserColor);
 			await SqlDataAccess.RunStoredProcedure("DeleteAllData");
 
 			var filename = base.RagProvider.GetDataFilePath(base.RagProvider.SqlConfig.JsonInitialDataFilename);
 			await this.LoadDataFromJsonFile(filename);
 
 			var elapsed = DateTime.Now.Subtract(started);
-			ConsoleOutput.WriteLine();
-			ConsoleOutput.WriteLine($"Data loaded in {elapsed}", ConsoleColor.Yellow);
+			ConsoleHelper.WriteLine();
+			ConsoleHelper.WriteLine($"Data loaded in {elapsed}", ConsoleHelper.UserColor);
 		}
 
 		private async Task LoadDataFromJsonFile(string filename)
 		{
-			ConsoleOutput.WriteLine();
-			ConsoleOutput.WriteLine($"Loading data from {filename}", ConsoleColor.Yellow);
+			ConsoleHelper.WriteLine();
+			ConsoleHelper.WriteLine($"Loading data from {filename}", ConsoleHelper.UserColor);
 
 			await SqlDataAccess.RunStoredProcedure(
 				storedProcedureName: "LoadMovies",
@@ -55,7 +55,7 @@ namespace Rag.AIClient.Engine.RagProviders.Sql
 
 			var started = DateTime.Now;
 
-			ConsoleOutput.WriteHeading("Update Data", ConsoleColor.Yellow);
+			ConsoleHelper.WriteHeading("Update Data", ConsoleHelper.UserColor);
 
 			// Load additional data into the database
 			var remoteFilename = base.RagProvider.GetDataFilePath(base.RagProvider.SqlConfig.JsonUpdateDataFilename);
@@ -70,15 +70,15 @@ namespace Rag.AIClient.Engine.RagProviders.Sql
 			await vectorizer.VectorizeData(movieIds);
 
 			var elapsed = DateTime.Now.Subtract(started);
-			ConsoleOutput.WriteLine();
-			ConsoleOutput.WriteLine($"Data updated in {elapsed}", ConsoleColor.Cyan);
+			ConsoleHelper.WriteLine();
+			ConsoleHelper.WriteLine($"Data updated in {elapsed}", ConsoleHelper.InfoColor);
 		}
 
 		public override async Task ResetData()
 		{
 			Debugger.Break();
 
-			ConsoleOutput.WriteHeading("Reset Data", ConsoleColor.Yellow);
+			ConsoleHelper.WriteHeading("Reset Data", ConsoleHelper.UserColor);
 
 			await SqlDataAccess.RunStoredProcedure("DeleteStarWarsTrilogy");
 		}

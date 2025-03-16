@@ -24,7 +24,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 		{
 			Debugger.Break();
 
-			ConsoleOutput.WriteHeading("Load Data", ConsoleColor.Yellow);
+			ConsoleHelper.WriteHeading("Load Data", ConsoleHelper.UserColor);
 
 			var database = await this.DropAndCreateDatabase();
 			var container = await this.CreateContainer(database);
@@ -41,14 +41,14 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 			try
 			{
 				await Shared.CosmosClient.GetDatabase(databaseName).DeleteAsync();
-				ConsoleOutput.WriteLine($"Deleted existing '{databaseName}' database");
+				ConsoleHelper.WriteLine($"Deleted existing '{databaseName}' database");
 			}
 			catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound) { }
 
 			await Shared.CosmosClient.CreateDatabaseAsync(databaseName);
 			var database = Shared.CosmosClient.GetDatabase(databaseName);
 
-			ConsoleOutput.WriteLine($"Created '{databaseName}' database");
+			ConsoleHelper.WriteLine($"Created '{databaseName}' database");
 
 			return database;
 		}
@@ -103,14 +103,14 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 			await database.CreateContainerAsync(containerProperties, containerThroughput);
 			var container = database.GetContainer(containerName);
 
-			ConsoleOutput.WriteLine($"Created '{containerName}' container");
+			ConsoleHelper.WriteLine($"Created '{containerName}' container");
 
 			return container;
 		}
 
 		private async Task CreateDocuments(string jsonFilename, Container container)
 		{
-			ConsoleOutput.WriteLine($"Creating documents from '{jsonFilename}'");
+			ConsoleHelper.WriteLine($"Creating documents from '{jsonFilename}'");
 
 			var started = DateTime.Now;
 
@@ -134,21 +134,21 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 						}
 						else
 						{
-							ConsoleOutput.WriteErrorLine($"Error creating document id='{document["id"]}'\n{t.Exception.Message}");
+							ConsoleHelper.WriteErrorLine($"Error creating document id='{document["id"]}'\n{t.Exception.Message}");
 							errors++;
 						}
 					}));
 			}
 			await Task.WhenAll(tasks);
 
-			ConsoleOutput.WriteLine($"Created {count - errors} document(s) with {errors} error(s): {cost:0.##} RUs in {DateTime.Now.Subtract(started)}");
+			ConsoleHelper.WriteLine($"Created {count - errors} document(s) with {errors} error(s): {cost:0.##} RUs in {DateTime.Now.Subtract(started)}");
 		}
 
 		public override async Task UpdateData()
 		{
 			Debugger.Break();
 
-			ConsoleOutput.WriteHeading("Update Data", ConsoleColor.Yellow);
+			ConsoleHelper.WriteHeading("Update Data", ConsoleHelper.UserColor);
 
 			var container = Shared.CosmosClient.GetContainer(
 				base.RagProvider.DatabaseName,
@@ -163,7 +163,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 		{
 			Debugger.Break();
 
-			ConsoleOutput.WriteHeading("Reset Data", ConsoleColor.Yellow);
+			ConsoleHelper.WriteHeading("Reset Data", ConsoleHelper.UserColor);
 
 			var container = Shared.CosmosClient.GetContainer(
 				base.RagProvider.DatabaseName,
@@ -177,7 +177,7 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.CosmosDb
 			foreach (var id in ids)
 			{
 				await container.DeleteItemAsync<object>(id, new PartitionKey("movie"));
-				ConsoleOutput.WriteLine($"Deleted movie ID {id}");
+				ConsoleHelper.WriteLine($"Deleted movie ID {id}");
 			}
 		}
 

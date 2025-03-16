@@ -7,20 +7,20 @@ BEGIN
 
 	SELECT
 		MovieId,
-		SimilarityScore = VECTOR_DISTANCE('cosine', @Vector, Vector)
+		CosineDistance = VECTOR_DISTANCE('cosine', @Vector, Vector)
 	INTO
 		#SimilarityResults
 	FROM
 		Movie
 	ORDER BY
-		SimilarityScore
+		CosineDistance
 
 	SELECT TOP 5
 		MovieJson = dbo.GetMoviesJsonUdf(MovieId),
-		SimilarityScore
+		CosineDistance
 	FROM
 		#SimilarityResults
 	ORDER BY
-		SimilarityScore
+		CosineDistance
 	
 END

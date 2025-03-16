@@ -17,13 +17,15 @@ namespace Rag.AIClient
 
 		private static async Task Main(string[] args)
 		{
+			ConsoleHelper.Clear();
+
 			Shared.Initialize();
 			SetRagProvider();
 
 			ShowMenu();
 			while (true)
 			{
-				ConsoleOutput.Write("Selection: ");
+				ConsoleHelper.Write("Selection: ");
 				var input = Console.ReadLine();
 				_action = input.Trim();
 				var command = _action.Split(' ')[0].ToUpper();
@@ -36,9 +38,14 @@ namespace Rag.AIClient
 				{
 					break;
 				}
+				else if (command == "CLS")
+				{
+					ConsoleHelper.Clear();
+					ShowMenu();
+				}
 				else
 				{
-					ConsoleOutput.WriteErrorLine($"?{input}");
+					ConsoleHelper.WriteErrorLine($"?{input}");
 				}
 			}
 		}
@@ -71,21 +78,21 @@ namespace Rag.AIClient
 		{
 			//Console.WindowWidth = 90;
 			Console.OutputEncoding = Encoding.UTF8;
-			Console.Clear();
-			Console.ForegroundColor = ConsoleColor.Cyan;
+			ConsoleHelper.Clear();
+			ConsoleHelper.SetForegroundColor(ConsoleHelper.InfoColor);
 			Console.WriteLine(@"  ____      _    ____      _    ___    ____ _ _            _   ");
 			Console.WriteLine(@" |  _ \    / \  / ___|    / \  |_ _|  / ___| (_) ___ _ __ | |_ ");
 			Console.WriteLine(@" | |_) |  / _ \| |  _    / _ \  | |  | |   | | |/ _ \ '_ \| __|");
 			Console.WriteLine(@" |  _ <  / ___ \ |_| |  / ___ \ | |  | |___| | |  __/ | | | |_ ");
 			Console.WriteLine(@" |_| \_\/_/   \_\____| /_/   \_\___|  \____|_|_|\___|_| |_|\__|");
 			Console.WriteLine();
-			ConsoleOutput.WriteEnvironmentInfo();
+			ConsoleHelper.WriteEnvironmentInfo();
 			Console.WriteLine($"{new string('─', Console.WindowWidth - 1)}");
 			Console.WriteLine();
-			Console.ResetColor();
+			ConsoleHelper.ResetColor();
 			Console.WriteLine("Make a selection");
 			Console.WriteLine();
-			Console.ForegroundColor = ConsoleColor.Gray;
+			ConsoleHelper.SetForegroundColor(ConsoleHelper.DefaultColor);
 			Console.WriteLine(" • ID - Initialize data        • CP - Change RAG provider");
 			Console.WriteLine(" • VD - Vectorize data         • CM - Change embedding model");
 			Console.WriteLine(" • UD - Update data            • UC - Update configuration");
@@ -96,7 +103,7 @@ namespace Rag.AIClient
 			Console.WriteLine();
 			Console.WriteLine(" • Q  - Quit");
 			Console.WriteLine();
-			Console.ResetColor();
+			ConsoleHelper.ResetColor();
 		}
 
 		private static async Task RunAction(Func<Task> actionMethod)
@@ -113,7 +120,7 @@ namespace Rag.AIClient
 					ex = ex.InnerException;
 					message += Environment.NewLine + ex.Message;
 				}
-				ConsoleOutput.WriteErrorLine($"Error: {message}");
+				ConsoleHelper.WriteErrorLine($"Error: {message}");
 			}
 
 			Console.WriteLine();
@@ -123,15 +130,15 @@ namespace Rag.AIClient
 
 		private static async Task UpdateConfiguration()
 		{
-			ConsoleOutput.WriteHeading("Demo Configuration", ConsoleColor.Yellow);
-			ConsoleOutput.WriteLine(JsonConvert.SerializeObject(DemoConfig.Instance, Formatting.Indented), ConsoleColor.Gray);
+			ConsoleHelper.WriteHeading("Demo Configuration", ConsoleHelper.UserColor);
+			ConsoleHelper.WriteLine(JsonConvert.SerializeObject(DemoConfig.Instance, Formatting.Indented), ConsoleHelper.DefaultColor);
 
 			var updated = false;
 			while (true)
 			{
-				ConsoleOutput.WriteLine();
-				ConsoleOutput.WriteLine("Change configuration property value", ConsoleColor.White);
-				Console.ForegroundColor = ConsoleColor.Gray;
+				ConsoleHelper.WriteLine();
+				ConsoleHelper.WriteLine("Change configuration property value", ConsoleHelper.ForegroundColor);
+				ConsoleHelper.SetForegroundColor(ConsoleHelper.DefaultColor);
 				Console.Write("  Property: ");
 				var propertyName = Console.ReadLine();
 
@@ -155,20 +162,20 @@ namespace Rag.AIClient
 					{
 						property.SetValue(DemoConfig.Instance, propertyValue);
 					}
-					ConsoleOutput.WriteLine("Property updated successfully", ConsoleColor.Yellow);
+					ConsoleHelper.WriteLine("Property updated successfully", ConsoleHelper.UserColor);
 					updated = true;
 				}
 				catch (Exception ex)
 				{
-					ConsoleOutput.WriteErrorLine(ex.Message);
+					ConsoleHelper.WriteErrorLine(ex.Message);
 				}
 			}
 
 			if (updated)
 			{
-				ConsoleOutput.WriteLine();
-				ConsoleOutput.WriteLine("Updated configuration:", ConsoleColor.White);
-				ConsoleOutput.WriteLine(JsonConvert.SerializeObject(DemoConfig.Instance, Formatting.Indented), ConsoleColor.Gray);
+				ConsoleHelper.WriteLine();
+				ConsoleHelper.WriteLine("Updated configuration:", ConsoleHelper.ForegroundColor);
+				ConsoleHelper.WriteLine(JsonConvert.SerializeObject(DemoConfig.Instance, Formatting.Indented), ConsoleHelper.DefaultColor);
 			} 
 		}
 
@@ -191,12 +198,12 @@ namespace Rag.AIClient
 				RagProviderFactory.ExternalRagProviderType = externalRagProviderType;
 				SetRagProvider();
 
-				ConsoleOutput.WriteLine($"Edition has been changed to: {RagProviderFactory.GetRagProvider().ProviderName}", ConsoleColor.Yellow);
+				ConsoleHelper.WriteLine($"Edition has been changed to: {RagProviderFactory.GetRagProvider().ProviderName}", ConsoleHelper.UserColor);
 			} 
 			catch (Exception ex)
 			{
-				ConsoleOutput.WriteErrorLine("Unable to change the RAG provider");
-				ConsoleOutput.WriteErrorLine(ex.Message);
+				ConsoleHelper.WriteErrorLine("Unable to change the RAG provider");
+				ConsoleHelper.WriteErrorLine(ex.Message);
 				RagProviderFactory.RagProviderType = currentRagProviderType;
 			}
 		}
@@ -207,21 +214,21 @@ namespace Rag.AIClient
 			try
 			{
 				EmbeddingModelFactory.EmbeddingModelType = (EmbeddingModelType)Enum.Parse(typeof(EmbeddingModelType), _action.Split(' ')[1], ignoreCase: true);
-				ConsoleOutput.WriteLine($"Embedding model has been changed to: {EmbeddingModelFactory.GetDeploymentName()}", ConsoleColor.Yellow);
+				ConsoleHelper.WriteLine($"Embedding model has been changed to: {EmbeddingModelFactory.GetDeploymentName()}", ConsoleHelper.UserColor);
 			}
 			catch (Exception ex)
 			{
-				ConsoleOutput.WriteErrorLine("Unable to change the embedding model");
-				ConsoleOutput.WriteErrorLine(ex.Message);
-				ConsoleOutput.WriteErrorLine($"Valid embedding model values are: {string.Join(", ", Enum.GetNames(typeof(EmbeddingModelType)))}");
+				ConsoleHelper.WriteErrorLine("Unable to change the embedding model");
+				ConsoleHelper.WriteErrorLine(ex.Message);
+				ConsoleHelper.WriteErrorLine($"Valid embedding model values are: {string.Join(", ", Enum.GetNames(typeof(EmbeddingModelType)))}");
 				EmbeddingModelFactory.EmbeddingModelType = currentEmbeddingModelType;
 			}
 		}
 
 		private static async Task ViewAppConfig()
 		{
-			ConsoleOutput.WriteHeading("App Config (appsettings.json)", ConsoleColor.Yellow);
-			ConsoleOutput.WriteLine(JsonConvert.SerializeObject(Shared.AppConfig, Formatting.Indented), ConsoleColor.Gray);
+			ConsoleHelper.WriteHeading("App Config (appsettings.json)", ConsoleHelper.UserColor);
+			ConsoleHelper.WriteLine(JsonConvert.SerializeObject(Shared.AppConfig, Formatting.Indented), ConsoleHelper.DefaultColor);
 		}
 
 		private static async Task RunHelloWorldDemo() =>
@@ -256,7 +263,7 @@ namespace Rag.AIClient
 
 		private static async Task InitializeAndVectorize(RagProviderType ragProviderType, EmbeddingModelType embeddingModelType)
 		{
-			ConsoleOutput.WriteHeading($"Initialize & Vectorize - {ragProviderType} {embeddingModelType}", ConsoleColor.Green);
+			ConsoleHelper.WriteHeading($"Initialize & Vectorize - {ragProviderType} {embeddingModelType}", ConsoleHelper.SystemColor);
 
 			RagProviderFactory.RagProviderType = ragProviderType;
 			EmbeddingModelFactory.EmbeddingModelType = embeddingModelType;
@@ -272,7 +279,7 @@ namespace Rag.AIClient
 			}
 			catch (Exception ex)
 			{
-				ConsoleOutput.WriteErrorLine(ex.Message);
+				ConsoleHelper.WriteErrorLine(ex.Message);
 			}
 		}
 

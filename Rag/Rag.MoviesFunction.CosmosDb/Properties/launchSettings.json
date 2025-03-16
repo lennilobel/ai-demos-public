@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "CosmosDb.Rag.Embed.Function.V4": {
+    "Rag.MoviesFunction.CosmosDb": {
       "commandName": "Project",
       "commandLineArgs": "--port 7053",
       "launchBrowser": false

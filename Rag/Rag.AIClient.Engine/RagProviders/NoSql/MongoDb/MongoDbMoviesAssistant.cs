@@ -85,9 +85,9 @@ namespace Rag.AIClient.Engine.RagProviders.NoSql.MongoDb
 				var vectorArrayPattern = @"(""vector"":\s*\[)[^\]]*(\])";
 				showSearch = Regex.Replace(showSearch, vectorArrayPattern, "$1 values... $2");
 
-				ConsoleOutput.WriteHeading("Cosmos DB for MongoDB vCore Vector Search Query", ConsoleColor.Green);
-				ConsoleOutput.WriteLine(showSearch, ConsoleColor.Green);
-				ConsoleOutput.WriteLine(showProject, ConsoleColor.Green);
+				ConsoleHelper.WriteHeading("Cosmos DB for MongoDB vCore Vector Search Query", ConsoleHelper.SystemColor);
+				ConsoleHelper.WriteLine(showSearch, ConsoleHelper.SystemColor);
+				ConsoleHelper.WriteLine(showProject, ConsoleHelper.SystemColor);
 			}
 
 			var search = BsonDocument.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(searchJObject));

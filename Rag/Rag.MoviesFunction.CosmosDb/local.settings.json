@@ -1,11 +1,11 @@
 {
     "IsEncrypted": false,
     "Values": {
-        "AzureWebJobsStorage": "",
+        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
         "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
         "CosmosDbConnectionString": "[CONNECTION-STRING]",
         "OpenAIEndpoint": "[ENDPOINT]",
-        "OpenAIKey": "[API-KEY]",
-        "OpenAIDeploymentName": "lenni-text-embedding-3-large"
+        "OpenAIApiKey": "[API-KEY]",
+        "OpenAIModelDeploymentName": "lenni-text-embedding-3-large"
     }
 }

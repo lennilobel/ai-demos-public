@@ -61,19 +61,19 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 				}
 				catch (Exception ex)
 				{
-					ConsoleOutput.WriteErrorLine(ex.Message);
+					ConsoleHelper.WriteErrorLine(ex.Message);
 				}
 			}
 		}
 
 		private void SayHello()
 		{
-			Console.Clear();
-			Console.ForegroundColor = ConsoleColor.Cyan;
+			ConsoleHelper.Clear();
+			ConsoleHelper.SetForegroundColor(ConsoleHelper.InfoColor);
 			this.ShowBanner();
-			ConsoleOutput.WriteEnvironmentInfo();
+			ConsoleHelper.WriteEnvironmentInfo();
 			Console.WriteLine();
-			Console.ResetColor();
+			ConsoleHelper.ResetColor();
 		}
 
 		protected abstract void ShowBanner();
@@ -104,8 +104,8 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 		private string GetQuestion()
 		{
-			ConsoleOutput.WriteHeading("User Question", ConsoleColor.Yellow);
-			ConsoleOutput.WriteLine("[A] = Auto / [M] = Manual / [ESC] = Quit: ", suppressLineFeed: true);
+			ConsoleHelper.WriteHeading("User Question", ConsoleHelper.UserColor);
+			ConsoleHelper.WriteLine("[A] = Auto / [M] = Manual / [ESC] = Quit: ", color: ConsoleHelper.ForegroundColor, suppressLineFeed: true);
 
 			if (this._interactive)
 			{
@@ -131,8 +131,8 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 				{
 					while (true)
 					{
-						ConsoleOutput.WriteLine("> ", ConsoleColor.Yellow, suppressLineFeed: true);
-						Console.ForegroundColor = ConsoleColor.Yellow;
+						ConsoleHelper.WriteLine("> ", ConsoleHelper.UserColor, suppressLineFeed: true);
+						ConsoleHelper.SetForegroundColor(ConsoleHelper.UserColor);
 						var manualQuestion = Console.ReadLine();
 						if (!string.IsNullOrWhiteSpace(manualQuestion))
 						{
@@ -170,13 +170,13 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			}
 
 			// Done
-			ConsoleOutput.WriteLine();
-			ConsoleOutput.WriteLine($"Vectorized question:     {this._elapsedVectorizeQuestion}");
-			ConsoleOutput.WriteLine($"Ran vector search:       {this._elapsedRunVectorSearch}");
-			ConsoleOutput.WriteLine($"Generated response:      {this._elapsedGenerateAnswer}");
+			ConsoleHelper.WriteLine();
+			ConsoleHelper.WriteLine($"Vectorized question:     {this._elapsedVectorizeQuestion}");
+			ConsoleHelper.WriteLine($"Ran vector search:       {this._elapsedRunVectorSearch}");
+			ConsoleHelper.WriteLine($"Generated response:      {this._elapsedGenerateAnswer}");
 			if (DemoConfig.Instance.GeneratePosterImage)
 			{
-				ConsoleOutput.WriteLine($"Generated poster image:  {this._elapsedGeneratePoster}");
+				ConsoleHelper.WriteLine($"Generated poster image:  {this._elapsedGeneratePoster}");
 			}
 		}
 
@@ -195,8 +195,8 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			}
 			catch (Exception ex)
 			{
-				ConsoleOutput.WriteErrorLine("Error vectorizing question");
-				ConsoleOutput.WriteErrorLine(ex.Message);
+				ConsoleHelper.WriteErrorLine("Error vectorizing question");
+				ConsoleHelper.WriteErrorLine(ex.Message);
 			}
 
 			this._elapsedVectorizeQuestion = DateTime.Now.Subtract(started);
@@ -243,13 +243,13 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 
 			if (DemoConfig.Instance.ShowInternalOperations)
 			{
-				ConsoleOutput.WriteHeading("Conversation History", ConsoleColor.Green);
+				ConsoleHelper.WriteHeading("Conversation History", ConsoleHelper.SystemColor);
 				var maxWidth = Math.Max(0, Console.WindowWidth - 10);
 				var counter = 0;
 				foreach (var message in conversation)
 				{
-					ConsoleOutput.WriteLine($" {++counter}) {message.GetType().Name}", ConsoleColor.Green);
-					ConsoleOutput.WriteLine($"     {message.Content.First().Text.Replace('\r', ' ').Replace('\n', ' ').Replace('\t', ' ').Substring(0, maxWidth)}...", ConsoleColor.Green);
+					ConsoleHelper.WriteLine($" {++counter}) {message.GetType().Name}", ConsoleHelper.SystemColor);
+					ConsoleHelper.WriteLine($"     {message.Content.First().Text.Replace('\r', ' ').Replace('\n', ' ').Replace('\t', ' ').Substring(0, maxWidth)}...", ConsoleHelper.SystemColor);
 					Console.WriteLine();
 				}
 
@@ -259,10 +259,10 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			var chatClient = Shared.AzureOpenAIClient.GetChatClient(Shared.AppConfig.OpenAI.CompletionDeploymentName);
 			var completionUpdates = chatClient.CompleteChatStreamingAsync(conversation);
 
-			ConsoleOutput.WriteHeading("Assistant Response", ConsoleColor.Cyan);
+			ConsoleHelper.WriteHeading("Assistant Response", ConsoleHelper.InfoColor);
 
 			sb = new StringBuilder();
-			Console.ForegroundColor = ConsoleColor.Cyan;
+			ConsoleHelper.SetForegroundColor(ConsoleHelper.InfoColor);
 			await foreach (var completionUpdate in completionUpdates)
 			{
 				foreach (var contentPart in completionUpdate.ContentUpdate)
@@ -272,7 +272,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 				}
 			}
 			Console.WriteLine();
-			Console.ResetColor();
+			ConsoleHelper.ResetColor();
 			var answer = sb.ToString();
 
 			conversation.Add(new AssistantChatMessage(answer));
@@ -318,8 +318,8 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			}
 			catch (Exception ex)
 			{
-				ConsoleOutput.WriteErrorLine("Error generating poster image");
-				ConsoleOutput.WriteErrorLine(ex.Message);
+				ConsoleHelper.WriteErrorLine("Error generating poster image");
+				ConsoleHelper.WriteErrorLine(ex.Message);
 			}
 
 			this._elapsedGeneratePoster = DateTime.Now.Subtract(started);
@@ -334,8 +334,8 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 				this.ConsoleWritePromptMessage($"Input prompt revised to:\n{generatedImage.RevisedPrompt}");
 			}
 
-			ConsoleOutput.WriteHeading("Image Generation Response", ConsoleColor.Cyan);
-			ConsoleOutput.WriteLine($"Generated image is ready at:\n{generatedImage.ImageUri.AbsoluteUri}", ConsoleColor.Cyan);
+			ConsoleHelper.WriteHeading("Image Generation Response", ConsoleHelper.InfoColor);
+			ConsoleHelper.WriteLine($"Generated image is ready at:\n{generatedImage.ImageUri.AbsoluteUri}", ConsoleHelper.InfoColor);
 
 			this.OpenBrowser(generatedImage.ImageUri.AbsoluteUri);
 		}
@@ -355,7 +355,7 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 			}
 			catch (Exception ex)
 			{
-				ConsoleOutput.WriteErrorLine($"Error opening browser: {ex.Message}");
+				ConsoleHelper.WriteErrorLine($"Error opening browser: {ex.Message}");
 			}
 		}
 
@@ -368,13 +368,13 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 				return;
 			}
 
-			ConsoleOutput.WriteHeading("Prompt Message", ConsoleColor.Green);
-			ConsoleOutput.WriteLine(text, ConsoleColor.Green);
+			ConsoleHelper.WriteHeading("Prompt Message", ConsoleHelper.SystemColor);
+			ConsoleHelper.WriteLine(text, ConsoleHelper.SystemColor);
 		}
 
 		private void ConsoleWriteQuestion(string text)
 		{
-			Console.ForegroundColor = ConsoleColor.Yellow;
+			ConsoleHelper.SetForegroundColor(ConsoleHelper.UserColor);
 
 			for (var i = 0; i < text.Length; i += 1)
 			{
@@ -382,8 +382,8 @@ namespace Rag.AIClient.Engine.RagProviders.Base
 				Thread.Sleep(1);
 			}
 
-			Console.ResetColor();
-			ConsoleOutput.WriteLine();
+			ConsoleHelper.ResetColor();
+			ConsoleHelper.WriteLine();
 		}
 
 		private void ConsoleClearLine()
